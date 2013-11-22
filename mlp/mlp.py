@@ -32,7 +32,6 @@ def gatingf(a2k, a2kp1):
 	return a2k*np.exp(a2kp1)
 
 def forwardpass(Nact, h1, x, w1s, w2):
-
 	# dot() - for 2D arrays equivalent to matrix multiplication!
 	a1s = np.dot(w1s,x)
 	print a1s
@@ -49,8 +48,12 @@ def forwardpass(Nact, h1, x, w1s, w2):
 
 	a2 = np.dot(w2, z)
 	print a2
+
 	return a2 
 
+def compute_rs(a2, ti):
+	tdashi = (ti+1)/2
+	r2 = sigmoidf(a2)-tdashi
 # split data into TRAINING set (2/3) and VALIDATION set (1/3); TEST set is provided separately
 
 # PREPROCESSING DATA: normalize input patterns to have coefficients in [0,1]
@@ -82,3 +85,4 @@ def main():
 
 if __name__ == "__main__":
 	main()		
+
