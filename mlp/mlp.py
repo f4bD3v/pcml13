@@ -32,6 +32,7 @@ class MultiLayerPerceptron:
 		self.b1 = np.array([np.random.normal(.5,.25) for i in range(0,self.num_as)])
 		self.b2 = np.random.normal(.5,.25)
 		self.X = X
+		self.num_points = len(X)
 		self.Y = Y
 
 	'''
@@ -52,11 +53,11 @@ class MultiLayerPerceptron:
 	'''
 		run forward pass in batch_mode to compute a(2) for full error
 	'''
-	def forward_prop_batch(self, X):
+	def forward_prop_batch(self):
 		# dot() - for 2D arrays equivalent to matrix multiplication!
-		self.a1s = np.dot(self.w1s,X.T)+self.b1
+		self.a1s = np.dot(self.w1s,self.X.T)+self.b1
 		print self.a1s
-		a11 = np.dot(self.w1s[0],x[0])
+		#a11 = np.dot(self.w1s[0],x[0])
 		print a11
 
 		# vectorize
@@ -98,8 +99,7 @@ class MultiLayerPerceptron:
 		return
 
 	'''
-		compute residuals for logarithmic error function
-		online_mode --> stochastic gradient descent
+		compute residuals for logarithmic error function online_mode --> stochastic gradient descent
 	'''
 	def log_res(self, label):
 		# labels - N x 1
@@ -129,6 +129,11 @@ class MultiLayerPerceptron:
 		return
 
 	def eval_full_err():
+		# forward pass for all
+		forward_prop_batch()
+		err_log_is = np.log(1+np.exp(-self.Y*self.a2)))
+		self.err_log = sum(err_log_is)/self.num_points
+
 
 	# split data into TRAINING set (2/3) and VALIDATION set (1/3); TEST set is provided separately
 
