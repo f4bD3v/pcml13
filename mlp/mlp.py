@@ -34,6 +34,7 @@ class MultiLayerPerceptron:
 		self.X = X
 		self.num_points = len(X)
 		self.Y = Y
+		self.epochs = 0
 
 	'''
 		sigmoid function
@@ -79,23 +80,28 @@ class MultiLayerPerceptron:
 	'''
 	def forward_prop_online(self, i):
 		# dot() - for 2D arrays equivalent to matrix multiplication!
-		x = X[i]
-		self.a1s = np.dot(self.w1s,x)+self.b1
-		print self.a1s
-		a11 = np.dot(self.w1s[0],x)
-		print a11
+		if self.epochs == 0:
+			x = X[i]
+			self.a1s = np.dot(self.w1s,x)+self.b1
+			print self.a1s
+			a11 = np.dot(self.w1s[0],x)
+			print a11
 
-		# vectorize
-		a2k = self.a1s[0:self.num_as:2]
-		print a2k
-		a2kp1 = self.a1s[1:self.num_as:2]
-		print a2kp1
+			# vectorize
+			a2k = self.a1s[0:self.num_as:2]
+			print a2k
+			a2kp1 = self.a1s[1:self.num_as:2]
+			print a2kp1
 
-		z = self.gatingf(a2k, a2kp1)
-		print z
+			z = self.gatingf(a2k, a2kp1)
+			print z
 
-		self.a2 = np.dot(z, self.w2)+self.b2
-		print self.a2
+			self.a2 = np.dot(z, self.w2)+self.b2
+			print self.a2
+		else: 
+			# just use previously computed a2 value for index i in total error
+			self.z = self.z[i]
+			self.a2 = self.a2[i]
 		return
 
 	'''
