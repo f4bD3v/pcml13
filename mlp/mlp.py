@@ -14,19 +14,22 @@
 '''
 
 import numpy as np
-import scipy as sp 
+import scipy.io
+import matplotlib.pyplot as plt
+
+import random
 
 class MultiLayerPerceptron:
 
-	def __init__(self, h1, feature_dim, X, Y):
-		self.feature_dim = feature_dim
+	def __init__(self, h1, X, Y):
+		self.feature_dim = X.shape[1] 
 		self.h1 = h1
 		self.num_as = 2*h1
 		# initialize w's
 		# w1s Nact x feature_dim 
-		self.w1s = np.array([[np.random.normal(0,(1/self.feature_dim)) for i in range(0,self.feature_dim)] for i in range(0,self.num_as)])
+		self.w1s = np.array([[np.random.normal(0,1.0/self.feature_dim) for i in range(self.feature_dim)] for i in range(self.num_as)])
 		#print "w1s: "+str(w1s)
-		self.w2 = np.array([np.random.normal(0,1/self.h1) for i in range(0,self.h1)])
+		self.w2 = np.array([np.random.normal(0,1.0/self.h1) for i in range(0,self.h1)])
 		#print "w2: "+str(w2)
 		# as many bias terms as as outputs in hidden layer
 		self.b1 = np.array([np.random.normal(.5,.25) for i in range(0,self.num_as)])
@@ -35,7 +38,9 @@ class MultiLayerPerceptron:
 		self.num_points = len(X)
 		self.Y = Y
 		self.epochs = 0
-
+		self.max_epochs = 10000
+		self.cvgc = 0.00001
+		self.cvg = False
 	'''
 		sigmoid function
 		parameter: vector of activation values
@@ -81,7 +86,7 @@ class MultiLayerPerceptron:
 	def forward_prop_online(self, i):
 		# dot() - for 2D arrays equivalent to matrix multiplication!
 		if self.epochs == 0:
-			x = X[i]
+			x = self.X[i]
 			self.a1s = np.dot(self.w1s,x)+self.b1
 			print self.a1s
 			a11 = np.dot(self.w1s[0],x)
@@ -117,8 +122,8 @@ class MultiLayerPerceptron:
 		print len(self.r1s)
 		return
 
-	def back_prop(self, i):
-		label = Y[i]
+	def back_prop_online(self, i):
+		label = self.Y[i]
 		self.log_res(label)
 		x = X[i]
 		# assemble gradient
@@ -127,19 +132,40 @@ class MultiLayerPerceptron:
 		gw1 = np.dot(self.r1s, array(x,)*self.num_as)
 		gb1 = self.r1 
 
-		self.w2 = -theta[i]*gw2
-		self.w1s = -theta[i]*gw1
-		self.b2 = -theta[i]*gb2
-		self.b1 = -theta[i]*gb1
+		self.w2 = self.w2-theta[i]*gw2
+		self.w1s = self.w1s-theta[i]*gw1
+		self.b2 = self.b2-theta[i]*gb2
+		self.b1 = self.b1-theta[i]*gb1
 
 		return
 
-	def eval_full_err():
+	def eval_full_err(self):
 		# forward pass for all
 		forward_prop_batch()
-		err_log_is = np.log(1+np.exp(-self.Y*self.a2)))
-		self.err_log = sum(err_log_is)/self.num_points
+		self.prev_log_err = self.log_err
+		log_err_is = np.log(1+np.exp(-self.Y*self.a2))
+		self.log_err = sum(log_err_is)/self.num_points
 
+
+	def gdescent(self):
+
+		while not self.cvg:
+			# pick random data point
+			i = random.choice(range(self.feature_dim))
+			self.forward_prop_online(i)
+			self.back_prop_online(i)
+			self.eval_full_err() # includes batch forward prop
+			if abs(self.prev_log_err - self.log_err) <= self.cvgc:
+				print '*** Convergence after ', self.epochs, ' epochs ***'
+				self.cvg = True 
+				self.print_status()
+
+			self.epochs+=1
+			if self.epochs == self.max_epochs:
+				print '*** Reached max. num of epochs', self.max_epochs, ' ***'
+
+
+		return
 
 	# split data into TRAINING set (2/3) and VALIDATION set (1/3); TEST set is provided separately
 
@@ -158,11 +184,30 @@ def main():
 
 	'''
 		Artificial XOR Problem
-		four datapoints x€R^2, h1 = 4
+		four datapoints x in R2, h1 = 4
 	'''
+	#xormlp = MultiLayerPerceptron(4, 2)
+	d = scipy.io.loadmat('../mnist/mp_3-5_data.mat') # corresponding MAT file
+	data = d['Xtrain']    # Xtest for test data
+	labels = d['Ytrain']  # Ytest for test labels
 
-	xormlp = MultiLayerPerceptron(h1=4, 2)
+	print 'Finished loading',data.shape[0],'datapoints'
+	print 'With',data.shape[1],'components each'
 
+	'''
+		split data
+	'''
+	rand_perm = np.random.permutation(data.shape[0])
+	perm_data = data[rand_perm]
+	perm_labels = labels[rand_perm]
+
+	train_len = 2*data.shape[0]/3
+	train_data = perm_data[0:train_len]
+	train_labels = perm_data[0:train_len]
+
+	h1 = 10
+	mlp = MultiLayerPerceptron(h1, train_data, train_labels)
+	mlp.gdescent()
 	'''	
 	feature_dim = 784 # length(x)
 
