@@ -16,7 +16,7 @@
 import numpy as np
 import scipy.io
 import matplotlib.pyplot as plt
-
+import math
 import random
 
 class MultiLayerPerceptron:
@@ -35,12 +35,14 @@ class MultiLayerPerceptron:
 		self.b1 = np.array([np.random.normal(.5,.25) for i in range(0,self.num_as)])
 		self.b2 = np.random.normal(.5,.25)
 		self.X = X
-		self.num_points = len(X)
+		self.num_points = X.shape[0] 
 		self.Y = Y
 		self.epochs = 0
-		self.max_epochs = 10000
+		self.max_epochs = 50 
 		self.cvgc = 0.00001
 		self.cvg = False
+		self.num_iter = 1 
+		self.log_err = 0
 	'''
 		sigmoid function
 		parameter: vector of activation values
@@ -61,22 +63,27 @@ class MultiLayerPerceptron:
 	'''
 	def forward_prop_batch(self):
 		# dot() - for 2D arrays equivalent to matrix multiplication!
-		self.a1s = np.dot(self.w1s,self.X.T)+self.b1
-		print self.a1s
+		print "b1 ", np.tile(self.b1, (self.X.shape[0], 1)).T.shape
+		self.a1s = np.dot(self.w1s,self.X.T)+np.tile(self.b1, (self.X.shape[0], 1)).T
+		#print self.a1s
 		#a11 = np.dot(self.w1s[0],x[0])
-		print a11
+		#print a11
 
 		# vectorize
-		a2k = self.a1s[:,0:self.num_as:2]
-		print a2k
-		a2kp1 = self.a1s[:,1:self.num_as:2]
-		print a2kp1
+		a2k = self.a1s[0:self.num_as:2, :]
+		print "a2k ",a2k
+		a2kp1 = self.a1s[1:self.num_as:2, :]
+		print "a2kp1 ",a2kp1
 
-		z = self.gatingf(a2k, a2kp1)
-		print z
-
-		self.a2 = np.dot(z, self.w2)+self.b2
-		print self.a2
+		# np.apply_along_axis for multiple inputs?
+		z = np.array([self.gatingf(a2k[:,i], a2kp1[:,i]) for i in range(self.X.shape[0])])
+		print "z ",z.shape
+		print self.w2.shape
+		print "dot z self.w2",np.dot(z, self.w2)
+		# a2, hat die selben werte
+		self.a2 = np.dot(z, self.w2)+np.tile(self.b2, (self.X.shape[0],))
+		print "shape a2 ", self.a2.shape
+		print "a2 ",self.a2
 		return
 
 	'''
@@ -85,28 +92,31 @@ class MultiLayerPerceptron:
 	'''
 	def forward_prop_online(self, i):
 		# dot() - for 2D arrays equivalent to matrix multiplication!
-		if self.epochs == 0:
-			x = self.X[i]
-			self.a1s = np.dot(self.w1s,x)+self.b1
-			print self.a1s
-			a11 = np.dot(self.w1s[0],x)
-			print a11
+		#if self.epochs == 0:
+		x = self.X[i]
+		self.a1s = np.dot(self.w1s,x)+self.b1
+		#print self.a1s
+		a11 = np.dot(self.w1s[0],x)
+		#print a11
 
-			# vectorize
-			a2k = self.a1s[0:self.num_as:2]
-			print a2k
-			a2kp1 = self.a1s[1:self.num_as:2]
-			print a2kp1
+		# vectorize
+		a2k = self.a1s[0:self.num_as:2]
+		#print a2k
+		a2kp1 = self.a1s[1:self.num_as:2]
+		#print a2kp1
 
-			z = self.gatingf(a2k, a2kp1)
-			print z
+		self.z = self.gatingf(a2k, a2kp1)
+		#print self.z
 
-			self.a2 = np.dot(z, self.w2)+self.b2
-			print self.a2
+		self.a2 = np.dot(self.z, self.w2)+self.b2
+		#print "a2 ",self.a2
+		'''	
 		else: 
 			# just use previously computed a2 value for index i in total error
 			self.z = self.z[i]
 			self.a2 = self.a2[i]
+		'''
+
 		return
 
 	'''
@@ -117,52 +127,73 @@ class MultiLayerPerceptron:
 		dlabel = (label+1)/2
 		self.r2 = self.sigmoidf(self.a2)-dlabel
 		#rks_sigm = np.array([[self.w1s[i][k]*self.sigmoidf(self.a1s[i][k]) if (k%2==0) else self.w1s[i][k]*self.sigmoidf(self.a1s[i][k])*self.sigmoidf(-self.a1s[i][k]) for k in range(0,self.num_as)] for i in range(0, self.feature_dim)])
-		rks_sigm = np.array([self.w1s[k]*self.sigmoidf(self.a1s[k]) if (k%2==0) else self.w1s[k]*self.sigmoidf(self.a1s[k])*self.sigmoidf(-self.a1s[k]) for k in range(0,self.num_as)])
-		self.r1s = np.dot(self.r2, rks_sigm) 
-		print len(self.r1s)
+		rks_sigm = np.array([self.w2[math.floor(k/2)]*self.sigmoidf(self.a1s[k]) if (k%2==0) else self.w2[math.floor(k/2)]*self.sigmoidf(self.a1s[k])*self.sigmoidf(-self.a1s[k]) for k in range(self.num_as)])
+		self.r1s = self.r2*rks_sigm 
+
 		return
 
 	def back_prop_online(self, i):
 		label = self.Y[i]
 		self.log_res(label)
-		x = X[i]
+		x = self.X[i]
 		# assemble gradient
-		gw2 = np.dot(self.r2, self.z)
+		gw2 = self.r2*self.z
+		print "gw2 shape: ",gw2.shape
 		gb2 = self.r2
-		gw1 = np.dot(self.r1s, array(x,)*self.num_as)
-		gb1 = self.r1 
+		print "gb2 shape: ",gb2.shape
+		gw1 = np.dot(np.tile(x, (20,1)).T, np.diag(self.r1s)).T
+		print "gw1 shape: ",gw1.shape
+		gb1 = self.r1s 
+		print "gb1 shape: ",gw1.shape
 
-		self.w2 = self.w2-theta[i]*gw2
-		self.w1s = self.w1s-theta[i]*gw1
-		self.b2 = self.b2-theta[i]*gb2
-		self.b1 = self.b1-theta[i]*gb1
+		eta = 1.0/self.num_iter
+		eta = 0.001
+		self.w2 = self.w2-eta*gw2
+		self.w1s = self.w1s-eta*gw1
+		self.b2 = self.b2-eta*gb2
+		self.b1 = self.b1-eta*gb1
 
 		return
 
 	def eval_full_err(self):
 		# forward pass for all
-		forward_prop_batch()
+		self.forward_prop_batch()
 		self.prev_log_err = self.log_err
-		log_err_is = np.log(1+np.exp(-self.Y*self.a2))
-		self.log_err = sum(log_err_is)/self.num_points
+		print "shape Y", self.Y.shape
+		print "shape a2", self.a2.shape
+		print (self.Y.flatten()*self.a2)
+		log_err_is = np.log(1+np.exp(-self.Y.flatten()*self.a2))
+		self.log_err = np.sum(log_err_is)/self.num_points
+		print "log_err" ,self.log_err
+		return
 
+	def print_status(self):
+		return
 
 	def gdescent(self):
 
 		while not self.cvg:
+
+			rand_perm = np.random.permutation(self.X.shape[0])
+			print "rand x perm",rand_perm
 			# pick random data point
-			i = random.choice(range(self.feature_dim))
-			self.forward_prop_online(i)
-			self.back_prop_online(i)
+			for i in rand_perm:
+				self.forward_prop_online(i)
+				self.back_prop_online(i)
+				self.print_status()
+				self.num_iter+=1
+
+			print "iter ", self.num_iter
 			self.eval_full_err() # includes batch forward prop
 			if abs(self.prev_log_err - self.log_err) <= self.cvgc:
 				print '*** Convergence after ', self.epochs, ' epochs ***'
 				self.cvg = True 
-				self.print_status()
 
 			self.epochs+=1
-			if self.epochs == self.max_epochs:
+			print "epochs: ",self.epochs
+			if self.epochs >= self.max_epochs:
 				print '*** Reached max. num of epochs', self.max_epochs, ' ***'
+				self.cvg = True
 
 
 		return
@@ -203,7 +234,12 @@ def main():
 
 	train_len = 2*data.shape[0]/3
 	train_data = perm_data[0:train_len]
-	train_labels = perm_data[0:train_len]
+
+	c_max = np.max(train_data)
+	c_min = np.min(train_data)
+
+	train_data[:,:] = (train_data[:,:]-c_min*1)/(c_max-c_min)
+	train_labels = perm_labels[0:train_len]
 
 	h1 = 10
 	mlp = MultiLayerPerceptron(h1, train_data, train_labels)
