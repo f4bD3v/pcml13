@@ -56,6 +56,8 @@ class MultiLayerPerceptron:
 		parameters: a2k (vector), a2kp1 (vector)
 	'''
 	def gatingf(self, a2k, a2kp1):
+		print a2k*self.sigmoidf(a2kp1)
+		print (a2k*self.sigmoidf(a2kp1)).shape
 		return a2k*self.sigmoidf(a2kp1)
 
 	'''
@@ -101,15 +103,13 @@ class MultiLayerPerceptron:
 
 		# vectorize
 		a2k = self.a1s[0:self.num_as:2]
-		#print a2k
 		a2kp1 = self.a1s[1:self.num_as:2]
-		#print a2kp1
 
 		self.z = self.gatingf(a2k, a2kp1)
-		#print self.z
+		print self.z
 
 		self.a2 = np.dot(self.z, self.w2)+self.b2
-		#print "a2 ",self.a2
+		print "a2 ",self.a2
 		'''	
 		else: 
 			# just use previously computed a2 value for index i in total error
@@ -137,21 +137,20 @@ class MultiLayerPerceptron:
 		self.log_res(label)
 		x = self.X[i]
 		# assemble gradient
-		gw2 = self.r2*self.z
-		print "gw2 shape: ",gw2.shape
-		gb2 = self.r2
-		print "gb2 shape: ",gb2.shape
-		gw1 = np.dot(np.tile(x, (20,1)).T, np.diag(self.r1s)).T
-		print "gw1 shape: ",gw1.shape
-		gb1 = self.r1s 
-		print "gb1 shape: ",gw1.shape
+		self.gw2 = self.r2*self.z
+		#print "gw2 shape: ",gw2.shape
+		self.gb2 = self.r2
+		#print "gb2 shape: ",gb2.shape
+		self.gw1 = np.dot(np.tile(x, (self.num_as,1)).T, np.diag(self.r1s)).T
+		self.gb1 = self.r1s 
+		#print "gb1 shape: ",gw1.shape
 
 		eta = 1.0/self.num_iter
 		eta = 0.001
-		self.w2 = self.w2-eta*gw2
-		self.w1s = self.w1s-eta*gw1
-		self.b2 = self.b2-eta*gb2
-		self.b1 = self.b1-eta*gb1
+		self.w2 = self.w2-eta*self.gw2
+		self.w1s = self.w1s-eta*self.gw1
+		self.b2 = self.b2-eta*self.gb2
+		self.b1 = self.b1-eta*self.gb1
 
 		return
 
@@ -159,10 +158,9 @@ class MultiLayerPerceptron:
 		# forward pass for all
 		self.forward_prop_batch()
 		self.prev_log_err = self.log_err
-		print "shape Y", self.Y.shape
-		print "shape a2", self.a2.shape
-		print (self.Y.flatten()*self.a2)
+		print self.a2
 		log_err_is = np.log(1+np.exp(-self.Y.flatten()*self.a2))
+		print log_err_is
 		self.log_err = np.sum(log_err_is)/self.num_points
 		print "log_err" ,self.log_err
 		return
@@ -213,36 +211,23 @@ class MultiLayerPerceptron:
 
 def main():
 
-	'''
-		Artificial XOR Problem
-		four datapoints x in R2, h1 = 4
-	'''
-	#xormlp = MultiLayerPerceptron(4, 2)
-	d = scipy.io.loadmat('../mnist/mp_3-5_data.mat') # corresponding MAT file
-	data = d['Xtrain']    # Xtest for test data
-	labels = d['Ytrain']  # Ytest for test labels
-
-	print 'Finished loading',data.shape[0],'datapoints'
-	print 'With',data.shape[1],'components each'
-
-	'''
-		split data
-	'''
-	rand_perm = np.random.permutation(data.shape[0])
-	perm_data = data[rand_perm]
-	perm_labels = labels[rand_perm]
-
-	train_len = 2*data.shape[0]/3
-	train_data = perm_data[0:train_len]
-
-	c_max = np.max(train_data)
-	c_min = np.min(train_data)
-
-	train_data[:,:] = (train_data[:,:]-c_min*1)/(c_max-c_min)
-	train_labels = perm_labels[0:train_len]
-
-	h1 = 10
+	train_data = np.load('50_training_samples.npy')
+	train_labels = np.load('50_training_labels.npy')
+	print train_data
+	print train_labels
+	h1 = 4 
 	mlp = MultiLayerPerceptron(h1, train_data, train_labels)
+
+	'''
+	mlp.forward_prop_online(1)
+	mlp.back_prop_online(1)
+	print "z: ",mlp.z
+	print mlp.r2
+	print mlp.gw2
+	print mlp.b2
+
+	print np.max(mlp.gw1)
+	'''
 	mlp.gdescent()
 	'''	
 	feature_dim = 784 # length(x)

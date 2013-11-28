@@ -7,6 +7,7 @@
 \paragraph{Splitting}
 
 \paragraph{Preprocessing}
+Preprocessing consisted of normalizing the data.
 
 \subsubsection{MLP setup}
 
@@ -16,6 +17,9 @@
 	\label{mlp}
 	\caption{dfdf}
 \end{figure}
+
+\paragraph{Early stopping}
+Evaluate empirical error $\hat{R}(\hat{f};\mathcal{D}_V)$ for validation set $\mathcal{D}_V$ along-side the training-error $\hat{R}(\hat{f};\mathcal{D}_T)$while training the MLP on $\mathcal{D}_T$. Stop at the training at the epoch where the validation error stops decreasing and starts increasing. 
 \subsubsection{Parameters for subtasks}
 
 \subsubsection{Examples of overfitting}
