@@ -1,0 +1,18 @@
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+
+\title{PCML Miniproject}
+\author{Taha Elgraini, Fabian Brix}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+The imperative of this project was to apply two different machine learning techniques, the Multilayer Perceptron (henceforth referred to as "MLP") and the Support Vector Machine (henceforth "SVM") to the recognition of hand-written digits. More specifically error back-propagation gradient descent optimization had to be implemented for MLP and the Sequential Minimal Optimization (SMO) algorithm had to be implemented to solve the problem with an SVM. Focus lay on a good understanding and clean implementation of the aforementioned algorithms as well as a sound evaluation of the performance of the implementation on problems posed with excerpts? the MNIST dataset.
+\input{'mlp/mlp.tex'}
+\input{'svm/svm.tex'}
+
+\end{document}
