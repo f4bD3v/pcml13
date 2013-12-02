@@ -38,17 +38,17 @@ class MultiLayerPerceptron:
 		self.num_points = X.shape[0] 
 		self.Y = Y
 		self.epochs = 0
-		self.max_epochs = 50 
-		self.cvgc = 0.00001
+		self.max_epochs = 50000 
+		self.cvgc = 1E-8
 		self.cvg = False
-		self.num_iter = 1 
+		self.num_iter = 0 
 		self.log_err = 0
 	'''
 		sigmoid function
 		parameter: vector of activation values
 	'''
 	def sigmoidf(self, x):
-		expx = np.exp(x)	
+		expx = np.exp(-x)	
 		return 1/(1+expx)
 
 	'''
@@ -56,8 +56,6 @@ class MultiLayerPerceptron:
 		parameters: a2k (vector), a2kp1 (vector)
 	'''
 	def gatingf(self, a2k, a2kp1):
-		print a2k*self.sigmoidf(a2kp1)
-		print (a2k*self.sigmoidf(a2kp1)).shape
 		return a2k*self.sigmoidf(a2kp1)
 
 	'''
@@ -82,7 +80,7 @@ class MultiLayerPerceptron:
 		print "z ",z.shape
 		print self.w2.shape
 		print "dot z self.w2",np.dot(z, self.w2)
-		# a2, hat die selben werte
+		
 		self.a2 = np.dot(z, self.w2)+np.tile(self.b2, (self.X.shape[0],))
 		print "shape a2 ", self.a2.shape
 		print "a2 ",self.a2
@@ -106,10 +104,10 @@ class MultiLayerPerceptron:
 		a2kp1 = self.a1s[1:self.num_as:2]
 
 		self.z = self.gatingf(a2k, a2kp1)
-		print self.z
+		#print self.z
 
 		self.a2 = np.dot(self.z, self.w2)+self.b2
-		print "a2 ",self.a2
+		#print "a2 ",self.a2
 		'''	
 		else: 
 			# just use previously computed a2 value for index i in total error
@@ -158,8 +156,30 @@ class MultiLayerPerceptron:
 		# forward pass for all
 		self.forward_prop_batch()
 		self.prev_log_err = self.log_err
-		print self.a2
-		log_err_is = np.log(1+np.exp(-self.Y.flatten()*self.a2))
+		output = self.Y.flatten()*self.a2
+		
+		'''
+		pos_ind = np.where(output >= 0)[0]
+		neg_ind = np.where(output < 0)[0]
+
+		pos_output = np.zeros(output.shape[0])
+		neg_output = np.zeros(output.shape[0])
+		pos_output[pos_ind] = output[pos_ind]
+		neg_output[neg_ind] = output[neg_ind]
+		print pos_output 
+		print neg_output
+
+		pos_ind_err = pos_output+np.log(1.0+np.exp(-pos_output))
+		pos_ind_err[neg_ind] = 0
+
+		neg_ind_err = np.log(1.0+np.exp(neg_output))
+		neg_ind_err[pos_ind] = 0
+		#pos_ind_logerr = np.log(output[pos_ind]+np.exp(-output[pos_ind]))
+		#neg_ind_logerr = np.log()
+
+		log_err_is = pos_output + neg_output
+		'''
+		log_err_is = np.log(1.0+np.exp(-output))
 		print log_err_is
 		self.log_err = np.sum(log_err_is)/self.num_points
 		print "log_err" ,self.log_err
@@ -176,12 +196,12 @@ class MultiLayerPerceptron:
 			print "rand x perm",rand_perm
 			# pick random data point
 			for i in rand_perm:
+				self.num_iter+=1
 				self.forward_prop_online(i)
 				self.back_prop_online(i)
 				self.print_status()
-				self.num_iter+=1
 
-			print "iter ", self.num_iter
+			#print "iter ", self.num_iter
 			self.eval_full_err() # includes batch forward prop
 			if abs(self.prev_log_err - self.log_err) <= self.cvgc:
 				print '*** Convergence after ', self.epochs, ' epochs ***'
@@ -213,7 +233,11 @@ def main():
 
 	train_data = np.load('50_training_samples.npy')
 	train_labels = np.load('50_training_labels.npy')
-	print train_data
+	#train_data = np.load('training_data.npy')
+	#train_labels = np.load('training_labels.npy')
+
+	print train_data 
+	print len(train_data)
 	print train_labels
 	h1 = 4 
 	mlp = MultiLayerPerceptron(h1, train_data, train_labels)
