@@ -19,14 +19,15 @@ def main():
 
 	train_len = 2*data.shape[0]/3
 	train_data = perm_data[0:train_len]
-	val_data = perm_data[train_len:]
+	valid_data = perm_data[train_len:]
 
 	c_max = np.max(train_data)
 	c_min = np.min(train_data)
 
 	train_data[:,:] = (train_data[:,:]-c_min*1)/(c_max-c_min)
-	val_data [:,:] = (val_data[:,:]-c_min*1)/(c_max-c_min)
+	valid_data[:,:] = (valid_data[:,:]-c_min*1)/(c_max-c_min)
 	train_labels = perm_labels[0:train_len]
+	valid_labels = perm_labels[train_len:]
 
 	fn_td = 'training_data.npy'
 	fn_lb = 'training_labels.npy'
@@ -34,6 +35,13 @@ def main():
 	print 'Saved training data to',fn_td
 	np.save(fn_lb, train_labels)
 	print 'Saved training labels to',fn_lb
+
+	fn_td = 'valid_data.npy'
+	fn_lb = 'valid_labels.npy'
+	np.save(fn_td, train_data)
+	print 'Saved validation data to',fn_td
+	np.save(fn_lb, train_labels)
+	print 'Saved validation labels to',fn_lb
 
 	'''
 		downsample bitmaps
@@ -45,14 +53,27 @@ def main():
 	num_samples = 50
 	rand_ind = random.sample(range(train_len), num_samples)	
 	train_50 = train_data[rand_ind]
+	print len(train_50)
 	label_50 = train_labels[rand_ind]
 
 	fn_td = str(num_samples)+'_training_samples.npy'
 	fn_lb = str(num_samples)+'_training_labels.npy'
-	np.save(fn_td, train_data)
+	np.save(fn_td, train_50)
 	print 'Saved',num_samples,'training data samples to',fn_td
-	np.save(fn_lb, train_labels)
+	np.save(fn_lb, label_50)
 	print 'Saved according training labels to',fn_lb
+
+	num_samples = num_samples/3  
+	rand_ind = random.sample(range(train_len), num_samples)	
+	valid_subset = train_data[rand_ind]
+	label_subset = train_labels[rand_ind]
+
+	fn_td = str(num_samples)+'_valid_samples.npy'
+	fn_lb = str(num_samples)+'_valid_labels.npy'
+	np.save(fn_td, valid_subset)
+	print 'Saved',num_samples,'validation data samples to',fn_td
+	np.save(fn_lb, label_subset)
+
 	return
 
 if __name__ == "__main__":
