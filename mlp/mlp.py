@@ -50,12 +50,12 @@ class MultiLayerPerceptron:
 		self.cvg = False
 		self.num_iter = 0 
 		self.log_err = np.empty(0)
-		self.mu = .2
+		self.mu = .6
 		self.dgw1 = np.zeros(self.w1s.shape)
 		self.dgw2 = np.zeros(self.w2.shape)
 		self.dgb1 = np.zeros(self.b1.shape)
 		self.dgb2 = 0
-		self.eta = 0.1
+		self.eta = 0.2
 		self.valid_err = 1E6
 
 	'''
@@ -161,23 +161,21 @@ class MultiLayerPerceptron:
 		self.gb1 = self.r1s 
 		#print "gb1 shape: ",gw1.shape
 
-		self.dgw2 = -self.eta*self.gw2
-		#self.dgw2 = -self.eta*(1-self.mu)*self.gw2+self.mu*self.dgw2
+		#self.dgw2 = -self.eta*self.gw2
+		self.dgw2 = -self.eta*(1-self.mu)*self.gw2+self.mu*self.dgw2
 		self.w2 = self.w2+self.dgw2
 
-		self.dgw1 = -self.eta*self.gw1
-		#self.dgw1 = -self.eta*(1-self.mu)*self.gw1+self.mu*self.dgw1
+		#self.dgw1 = -self.eta*self.gw1
+		self.dgw1 = -self.eta*(1-self.mu)*self.gw1+self.mu*self.dgw1
 		self.w1s = self.w1s+self.dgw1
 
-		#self.dgb2 = -self.eta*(1-self.mu)*self.gb2+self.mu*self.dgb2
-		self.dgb2 = -self.eta*self.gb2
+		self.dgb2 = -self.eta*(1-self.mu)*self.gb2+self.mu*self.dgb2
+		#self.dgb2 = -self.eta*self.gb2
 		self.b2 = self.b2+self.dgb2
 		
-		#self.dgb1 = -self.eta*(1-self.mu)*self.gb1+self.mu*self.dgb1
-		self.dgb1 = -self.eta*self.gb1
+		self.dgb1 = -self.eta*(1-self.mu)*self.gb1+self.mu*self.dgb1
+		#self.dgb1 = -self.eta*self.gb1
 		self.b1 = self.b1+self.dgb1
-
-	
 
 		return
 
@@ -207,7 +205,10 @@ class MultiLayerPerceptron:
 		#neg_ind_logerr = np.log()
 
 		log_err_is = pos_ind_err + neg_ind_err
-		log_err = np.sum(log_err_is)/self.num_points
+		curr_num_points = X.shape[0]
+		print curr_num_points
+		log_err = np.sum(log_err_is)/curr_num_points
+
 		return log_err
 
 	def eval_train_err(self):
