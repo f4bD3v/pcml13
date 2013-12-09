@@ -55,7 +55,7 @@ class MultiLayerPerceptron:
 		self.dgw2 = np.zeros(self.w2.shape)
 		self.dgb1 = np.zeros(self.b1.shape)
 		self.dgb2 = 0
-		self.eta = 0.2
+		self.eta = 0.3
 		self.valid_err = 1E6
 
 	'''
@@ -189,33 +189,29 @@ class MultiLayerPerceptron:
 		output = Y.flatten()*self.a2
 
 		pos_ind = np.where(output >= 0)[0]
-		print pos_ind
 		neg_ind = np.where(output < 0)[0]
-<<<<<<< HEAD
-		print neg_ind
-=======
-        print "negative iutputs ",neg_ind
-        print "positive iutputs ",pos_ind
-        pos_output = np.zeros(output.shape[0])
-        neg_output = np.zeros(output.shape[0])
->>>>>>> 93ce258f7cbf95ff75589e0c82c6689e427976f2
+		print "ind neg values ",neg_ind
+		print "ind pos values ",pos_ind
 
-        pos_output[pos_ind] = output[pos_ind]
-        neg_output[neg_ind] = output[neg_ind]
+		pos_output = np.zeros(output.shape[0])
+		neg_output = np.zeros(output.shape[0])
 
-        pos_ind_err = np.log(1.0+np.exp(-pos_output))
-        pos_ind_err[neg_ind] = 0
+		pos_output[pos_ind] = output[pos_ind]
+		neg_output[neg_ind] = output[neg_ind]
 
-        neg_ind_err = -neg_output+np.log(1.0+np.exp(neg_output))
-        neg_ind_err[pos_ind] = 0
-        print "negative iutputs ", neg_ind_err
-        print "positive outputs ", pos_ind_err
-        log_err_is = pos_ind_err + neg_ind_err
-        curr_num_points = X.shape[0]
-        print curr_num_points
-        log_err = np.sum(log_err_is)/curr_num_points
+		pos_ind_err = np.log(1.0+np.exp(-pos_output))
+		pos_ind_err[neg_ind] = 0
 
-        return log_err
+		neg_ind_err = -neg_output+np.log(1.0+np.exp(neg_output))
+		neg_ind_err[pos_ind] = 0
+		print "negative iutputs ", neg_ind_err
+		print "positive outputs ", pos_ind_err
+		log_err_is = pos_ind_err + neg_ind_err
+		curr_num_points = X.shape[0]
+		print curr_num_points
+		log_err = np.sum(log_err_is)/curr_num_points
+
+		return log_err
 
 	def eval_train_err(self):
 
@@ -234,7 +230,7 @@ class MultiLayerPerceptron:
 		return
 
 	def print_status(self):
-		print 'w1s',self.gw1
+		print 'w1s',np.where(self.gw1 > 0)
 		print 'w2',self.gw2
 		print 'b1',self.gb1
 		print 'b2',self.gb2
@@ -263,18 +259,21 @@ class MultiLayerPerceptron:
 
 			#print "iter ", self.num_iter
 			self.eval_train_err() # includes batch forward prop
-			self.eval_valid_err()
+			#self.eval_valid_err()
+
+			self.epochs+=1
+			self.eta-=.01
+
+			'''
 			if self.valid_err > self.prev_valid_err:
 				print '*** Convergence after ', self.epochs, ' epochs ***'	
 				self.cvg = True
-			'''
 			if abs(self.prev_log_err - self.log_err) <= self.cvgc: 
 				print '*** Convergence after ', self.epochs, ' epochs ***'	self.cvg = True
 			'''
-			self.eta-=.01
 
-			self.epochs+=1
 			print "epochs: ",self.epochs
+
 			if self.epochs >= self.max_epochs:
 				print '*** Reached max. num of epochs', self.max_epochs, ' ***'
 				self.cvg = True
@@ -311,16 +310,17 @@ def main():
 	xormlp.gdescent()
 
 	'''
-	#rain_data = np.load('50_training_samples.npy')
-	#train_labels = np.load('50_training_labels.npy')
-	train_data = np.load('training_data.npy')
-	train_labels = np.load('training_labels.npy')
+	train_data = np.load('50_training_samples.npy')
+	train_labels = np.load('50_training_labels.npy')
+	#train_data = np.load('training_data.npy')
+	#train_labels = np.load('training_labels.npy')
 	valid_data = np.load('16_valid_samples.npy')
 	valid_labels = np.load('16_valid_labels.npy')
 
 	print train_data 
 	print len(train_data)
 	print train_labels
+
 	h1 = 10 
 	mlp = MultiLayerPerceptron(h1, train_data, train_labels, valid_data, valid_labels)
 	mlp.gdescent()
