@@ -2,6 +2,21 @@ import numpy as np
 import scipy.io
 import random
 
+
+def normalize():
+
+	return	
+
+def save_data(data, labels, name):
+	fn_td = str(name)+'_data.npy'
+	fn_lb = str(name)+'_labels.npy'
+	np.save(fn_td, data)
+	print 'Saved '+str(name)+' data to',fn_td
+	np.save(fn_lb, labels)
+	print 'Saved '+str(name)+' labels to',fn_lb
+
+	return
+
 def main():
 	d = scipy.io.loadmat('../mnist/mp_3-5_data.mat') # corresponding MAT file
 	data = d['Xtrain']    # Xtest for test data
@@ -25,23 +40,15 @@ def main():
 	c_min = np.min(train_data)
 
 	train_data[:,:] = (train_data[:,:]-c_min*1)/(c_max-c_min)
-	valid_data[:,:] = (valid_data[:,:]-c_min*1)/(c_max-c_min)
 	train_labels = perm_labels[0:train_len]
+
+	save_data(train_data, train_labels, 'training')
+
+
+	valid_data[:,:] = (valid_data[:,:]-c_min*1)/(c_max-c_min)
 	valid_labels = perm_labels[train_len:]
 
-	fn_td = 'training_data.npy'
-	fn_lb = 'training_labels.npy'
-	np.save(fn_td, train_data)
-	print 'Saved training data to',fn_td
-	np.save(fn_lb, train_labels)
-	print 'Saved training labels to',fn_lb
-
-	fn_td = 'valid_data.npy'
-	fn_lb = 'valid_labels.npy'
-	np.save(fn_td, train_data)
-	print 'Saved validation data to',fn_td
-	np.save(fn_lb, train_labels)
-	print 'Saved validation labels to',fn_lb
+	save_data(valid_data, valid_labels, 'validation')
 
 	'''
 		downsample bitmaps
@@ -52,27 +59,18 @@ def main():
 	'''
 	num_samples = 50
 	rand_ind = random.sample(range(train_len), num_samples)	
-	train_50 = train_data[rand_ind]
-	print len(train_50)
-	label_50 = train_labels[rand_ind]
+	train_data_50 = train_data[rand_ind]
+	print len(train_data_50)
+	train_label_50 = train_labels[rand_ind]
 
-	fn_td = str(num_samples)+'_training_samples.npy'
-	fn_lb = str(num_samples)+'_training_labels.npy'
-	np.save(fn_td, train_50)
-	print 'Saved',num_samples,'training data samples to',fn_td
-	np.save(fn_lb, label_50)
-	print 'Saved according training labels to',fn_lb
+	save_data(train_data_50, train_label_50, '50_training')
 
-	num_samples = num_samples/3  
-	rand_ind = random.sample(range(train_len), num_samples)	
-	valid_subset = train_data[rand_ind]
-	label_subset = train_labels[rand_ind]
+	#num_samples = num_samples/3  
+	rand_ind = random.sample(range(len(valid_data)), num_samples)	
+	valid_data_50 = valid_data[rand_ind]
+	valid_label_50 = valid_labels[rand_ind]
 
-	fn_td = str(num_samples)+'_valid_samples.npy'
-	fn_lb = str(num_samples)+'_valid_labels.npy'
-	np.save(fn_td, valid_subset)
-	print 'Saved',num_samples,'validation data samples to',fn_td
-	np.save(fn_lb, label_subset)
+	save_data(valid_data_50, valid_label_50, str(num_samples)+'_validation')
 
 	return
 

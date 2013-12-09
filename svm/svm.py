@@ -100,12 +100,17 @@ class C_SupportVectorMachine:
 			print "sigma",self.sigma
 
 			self.set_L_H(i,j)
+			print self.K[i,i]
 			eta = self.K[i,i]+self.K[j,j]-2*self.K[i,j]
+			print eta
 
 			nalphaj = 0
 			if eta > 10E-15:
 				unc_alphaj = self.alpha[j]+self.t[j]*(self.f[i]-self.f[j])/eta
+				print "unc_alpha",unc_alphaj
 				nalphaj = self.clip_unc_alpha(unc_alphaj)
+				print "nalphaj",nalphaj
+				print self.alpha
 			# second derivative is negative
 			else:
 				vi = self.f[i]+self.t[i]-self.alpha[i]*self.t[i]*self.K[i,i]-self.alpha[j]*self.t[j]*self.K[i,j]
@@ -117,7 +122,9 @@ class C_SupportVectorMachine:
 				else:
 					nalphaj = self.L
 
+			print nalphaj
 			nalphai = self.alpha[i]+self.sigma*(self.alpha[j]-nalphaj)
+			print "nalphai", nalphai
 			#nalphai = self.w-self.sigma*nalphaj
 
 			# update f
@@ -127,14 +134,17 @@ class C_SupportVectorMachine:
 
 			# update sets I_low, I_up
 			sv_ind = np.where((self.alpha > 0) & (self.alpha < self.C))[0]
-			print sv_ind
-			print self.alpha
-			ytildei = np.dot(self.K[:,sv_ind].T, self.alpha*self.t)
-			print len(sv_ind)
-			self.b = np.sum(self.t[sv_ind]-ytildei)/len(sv_ind)
-			print self.b
+			if sv_ind.size == 0:
+				self.b = 0
+			else:
+				print sv_ind
+				print self.alpha
+				ytildei = np.dot(self.K[:,sv_ind].T, self.alpha*self.t)
+				print len(sv_ind)
+				self.b = np.sum(self.t[sv_ind]-ytildei)/len(sv_ind)
+				print self.b
 
-			self.Iup = np.where(self.f <= self.b)[0]
+			self.Iup = np.where(self.f <= self.b)[1]
 			print "Iup", self.Iup
 			self.Ilow = np.where(self.f >= self.b)[0]
 			print "Ilow", self.Ilow
@@ -150,7 +160,8 @@ def main():
 	training_data = np.load('svm_50_training_samples.npy')
 	training_labels = np.load('svm_50_training_labels.npy')
 
-	svm = C_SupportVectorMachine(100, 1E-4)
+
+	svm = C_SupportVectorMachine(200, 1E-4)
 	klf = KFold(len(training_labels), 10, indices=False)
 	#X_train, X_valid, Y_train, Y_valid = cross-validation.train_test_split(training_data, training_labels, test_size=0.2, random_state=0)	
 	for train,test in klf:

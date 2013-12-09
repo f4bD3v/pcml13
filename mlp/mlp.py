@@ -26,36 +26,55 @@ class MultiLayerPerceptron:
 		self.feature_dim = X.shape[1] 
 		self.h1 = h1
 		self.num_as = 2*h1
-		# initialize w's
-		# w1s Nact x feature_dim 
-		self.w1s = np.array([[np.random.normal(0,1.0/self.feature_dim) for i in range(self.feature_dim)] for i in range(self.num_as)])
-		self.prev_w1s = 0
-		#print "w1s: "+str(w1s)
-		self.w2 = np.array([np.random.normal(0,1.0/self.h1) for i in range(0,self.h1)])
-		self.prev_w2 = 0
-		#print "w2: "+str(w2)
-		# as many bias terms as as outputs in hidden layer
-		self.b1 = np.array([np.random.normal(.5,.25) for i in range(0,self.num_as)])
-		self.prev_b1 = 0
-		self.b2 = np.random.normal(.5,.25)
-		self.prev_b2 = 0
+
+		'''
+			assign data 
+		'''
 		self.X = X
-		self.num_points = X.shape[0] 
 		self.Y = Y
 		self.X_valid = X_valid
 		self.Y_valid = Y_valid
-		self.epochs = 0
-		self.max_epochs = 50000 
-		self.cvgc = 1E-8
-		self.cvg = False
-		self.num_iter = 0 
-		self.log_err = np.empty(0)
-		self.mu = .6
+		
+		'''
+		 	initialize weights
+		'''
+
+		# w1s Nact x feature_dim 
+		self.w1s = np.array([[np.random.normal(0,1.0/self.feature_dim) for i in range(self.feature_dim)] for i in range(self.num_as)])
+		self.w2 = np.array([np.random.normal(0,1.0/self.h1) for i in range(0,self.h1)])
+
+		#print "w1s: "+str(w1s)
+		#print "w2: "+str(w2)
+
+		'''
+			initialize biases
+		'''
+		# as many bias terms as as outputs in hidden layer
+		self.b1 = np.array([np.random.normal(.5,.25) for i in range(0,self.num_as)])
+		self.b2 = np.random.normal(.5,.25)
+
+		'''
+			initialize gradients, learning rate and momentum term
+		'''
 		self.dgw1 = np.zeros(self.w1s.shape)
 		self.dgw2 = np.zeros(self.w2.shape)
 		self.dgb1 = np.zeros(self.b1.shape)
 		self.dgb2 = 0
-		self.eta = 0.3
+		self.eta = 0.01
+		self.mu = 0.15
+
+		'''
+			gdescent loop variables, errors
+		'''
+
+		self.epochs = 0
+		self.max_epochs = 50000 
+		self.num_iter = 0 
+
+		self.cvgc = 1E-8
+		self.cvg = False
+
+		self.log_err = np.empty(0)
 		self.valid_err = 1E6
 
 	'''
@@ -140,7 +159,8 @@ class MultiLayerPerceptron:
 	def log_res(self, label):
 		# labels - N x 1
 		dlabel = (label+1)/2
-		self.r2 = self.sigmoidf(self.a2)-dlabel
+		#self.r2 = self.sigmoidf(label*self.a2)-dlabel
+		self.r2 = -label*np.exp(-label*self.a2)*self.sigmoidf(label*self.a2)
 		#rks_sigm = np.array([[self.w1s[i][k]*self.sigmoidf(self.a1s[i][k]) if (k%2==0) else self.w1s[i][k]*self.sigmoidf(self.a1s[i][k])*self.sigmoidf(-self.a1s[i][k]) for k in range(0,self.num_as)] for i in range(0, self.feature_dim)])
 		r1s_sigm = np.array([self.w2[math.floor(k/2)]*self.sigmoidf(self.a1s[k]) if (k%2==0) else self.w2[math.floor(k/2)]*self.a1s[k-1]*self.sigmoidf(self.a1s[k])*self.sigmoidf(-self.a1s[k]) for k in range(self.num_as)])
 		self.r1s = self.r2*r1s_sigm 
@@ -190,8 +210,6 @@ class MultiLayerPerceptron:
 
 		pos_ind = np.where(output >= 0)[0]
 		neg_ind = np.where(output < 0)[0]
-		print "ind neg values ",neg_ind
-		print "ind pos values ",pos_ind
 
 		pos_output = np.zeros(output.shape[0])
 		neg_output = np.zeros(output.shape[0])
@@ -204,29 +222,23 @@ class MultiLayerPerceptron:
 
 		neg_ind_err = -neg_output+np.log(1.0+np.exp(neg_output))
 		neg_ind_err[pos_ind] = 0
-		print "negative iutputs ", neg_ind_err
-		print "positive outputs ", pos_ind_err
+
 		log_err_is = pos_ind_err + neg_ind_err
 		curr_num_points = X.shape[0]
 		print curr_num_points
 		log_err = np.sum(log_err_is)/curr_num_points
-
 		return log_err
 
 	def eval_train_err(self):
-
 		log_err = self.eval_err(self.X, self.Y)
 		np.append(self.log_err, log_err)
 		print "train_err" ,log_err
-
 		return
 
 	def eval_valid_err(self):
-
 		self.prev_valid_err = self.valid_err
-		log_err = self.eval_err(self.X_valid, self.Y_valid)
-		self.valid_err = log_err
-		print "valid_err", log_err
+		self.valid_err = self.eval_err(self.X_valid, self.Y_valid)
+		print "valid_err", self.valid_err
 		return
 
 	def print_status(self):
@@ -259,15 +271,15 @@ class MultiLayerPerceptron:
 
 			#print "iter ", self.num_iter
 			self.eval_train_err() # includes batch forward prop
-			#self.eval_valid_err()
+			self.eval_valid_err()
 
 			self.epochs+=1
-			self.eta-=.01
+			#self.eta-=.01
 
-			'''
 			if self.valid_err > self.prev_valid_err:
 				print '*** Convergence after ', self.epochs, ' epochs ***'	
 				self.cvg = True
+			'''
 			if abs(self.prev_log_err - self.log_err) <= self.cvgc: 
 				print '*** Convergence after ', self.epochs, ' epochs ***'	self.cvg = True
 			'''
@@ -310,18 +322,18 @@ def main():
 	xormlp.gdescent()
 
 	'''
-	train_data = np.load('50_training_samples.npy')
-	train_labels = np.load('50_training_labels.npy')
-	#train_data = np.load('training_data.npy')
-	#train_labels = np.load('training_labels.npy')
-	valid_data = np.load('16_valid_samples.npy')
-	valid_labels = np.load('16_valid_labels.npy')
+	#train_data = np.load('50_training_data.npy')
+	#train_labels = np.load('50_training_labels.npy')
+	train_data = np.load('training_data.npy')
+	train_labels = np.load('training_labels.npy')
+	valid_data = np.load('50_validation_data.npy')
+	valid_labels = np.load('50_validation_labels.npy')
 
 	print train_data 
 	print len(train_data)
 	print train_labels
 
-	h1 = 10 
+	h1 = 10
 	mlp = MultiLayerPerceptron(h1, train_data, train_labels, valid_data, valid_labels)
 	mlp.gdescent()
 
