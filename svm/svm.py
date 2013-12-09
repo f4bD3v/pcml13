@@ -56,11 +56,15 @@ class C_SupportVectorMachine:
 		return (i_low, i_up)
 
 	def set_L_H(self, i, j):
-		self.sigma = self.t[i]*self.t[j]
-		self.w = self.alpha[i]+sigma*self.alpha[j]
-		sw = sigma*w
-		self.L = np.max(0, sw-(self.C if sigma==1 else 0))
-		self.H = np.max(self.C, sw+(self.C if sigma==-1 else 0))
+		self.w = self.alpha[i]+self.sigma*self.alpha[j]
+		print "w",self.w
+		sw = self.sigma*self.w
+		print "sw",sw
+		self.L = np.maximum(0, sw-(self.C if self.sigma==1 else 0))
+		print "L", self.L
+		self.H = np.minimum(self.C, sw+(self.C if self.sigma==-1 else 0))
+		print "H", self.H
+
 		return 
 
 	def clip_unc_alpha(self, unc_alpha):
@@ -71,51 +75,69 @@ class C_SupportVectorMachine:
 
 		return unc_alpha
 
-	def eval_phi_L(self, i, j):
+	def eval_phi_L(self, i, j, vi, vj):
 		Li = self.w-self.sigma*self.L
-		phi = (K[i,i]*np.power(Li,2)+K[j,j]*np.power(self.L,2))/2+self.sigma*K[i,j]*Li*self.L+self.t[i]*Li*vi+self.t[j]*self.L*vj-Li-self.L
+		phi = (self.K[i,i]*np.power(Li,2)+self.K[j,j]*np.power(self.L,2))/2+self.sigma*self.K[i,j]*Li*self.L+self.t[i]*Li*vi+self.t[j]*self.L*vj-Li-self.L
 		return phi
 
-	def eval_phi_H(self, i, j):
+	def eval_phi_H(self, i, j, vi, vj):
 		Hi = self.w-self.sigma*self.H
-		phi = (K[i,i]*np.power(Hi,2)+K[j,j]*np.power(self.H,2))/2+self.sigma*K[i,j]*Hi*self.H+self.t[i]*Hi*vi+self.t[j]*self.H*vj-Hi-self.H
+		phi = (self.K[i,i]*np.power(Hi,2)+self.K[j,j]*np.power(self.H,2))/2+self.sigma*self.K[i,j]*Hi*self.H+self.t[i]*Hi*vi+self.t[j]*self.H*vj-Hi-self.H
 		return phi
 
 
 	def seq_min_opt(self):
 		while np.dot(self.alpha, self.t)==0:
 			mv_pair = self.select_mv_pair()
-			print mv_pair
+			print "index pair", mv_pair
 			i = mv_pair[0]
 			j = mv_pair[1]
 
 			if j == -1:
 				break
 
-			sigma = self.t[i]*self.t[j]
+			self.sigma = self.t[i]*self.t[j]
+			print "sigma",self.sigma
+
 			self.set_L_H(i,j)
 			eta = self.K[i,i]+self.K[j,j]-2*self.K[i,j]
 
 			nalphaj = 0
 			if eta > 10E-15:
-				unc_alphaj = alpha[j]+self.t[j]*(self.f[i]-self.f[j])/eta
+				unc_alphaj = self.alpha[j]+self.t[j]*(self.f[i]-self.f[j])/eta
 				nalphaj = self.clip_unc_alpha(unc_alphaj)
 			# second derivative is negative
 			else:
-				phiH = self.eval_phi_H(i,j)
-				phiL = self.eval_phi_L(i,j)
+				vi = self.f[i]+self.t[i]-self.alpha[i]*self.t[i]*self.K[i,i]-self.alpha[j]*self.t[j]*self.K[i,j]
+				vj = self.f[j]+self.t[j]-self.alpha[i]*self.t[i]*self.K[i,j]-self.alpha[j]*self.t[j]*self.K[j,j]
+				phiH = self.eval_phi_H(i,j, vi, vj)
+				phiL = self.eval_phi_L(i,j, vi, vj)
 				if phiL > phiH:
 					nalphaj = self.H
 				else:
 					nalphaj = self.L
 
-			nalphai = self.alpha[i]+sigma*(alpha[j]-nalphaj)
+			nalphai = self.alpha[i]+self.sigma*(self.alpha[j]-nalphaj)
+			#nalphai = self.w-self.sigma*nalphaj
+
 			# update f
-			self.f = self.f + self.t[i]*(nalphai-self.alpha[i])*K[:,i]+self.t[j]*(nalphaj-self.alpha[j])*K[:,j]
+			self.f = self.f + self.t[i]*(nalphai-self.alpha[i])*self.K[:,i]+self.t[j]*(nalphaj-self.alpha[j])*self.K[:,j]
 			self.alpha[i] = nalphai
 			self.alpha[j] = nalphaj
 
 			# update sets I_low, I_up
+			sv_ind = np.where((self.alpha > 0) & (self.alpha < self.C))[0]
+			print sv_ind
+			print self.alpha
+			ytildei = np.dot(self.K[:,sv_ind].T, self.alpha*self.t)
+			print len(sv_ind)
+			self.b = np.sum(self.t[sv_ind]-ytildei)/len(sv_ind)
+			print self.b
+
+			self.Iup = np.where(self.f <= self.b)[0]
+			print "Iup", self.Iup
+			self.Ilow = np.where(self.f >= self.b)[0]
+			print "Ilow", self.Ilow
 
 		return		
 
@@ -129,9 +151,9 @@ def main():
 	training_labels = np.load('svm_50_training_labels.npy')
 
 	svm = C_SupportVectorMachine(100, 1E-4)
-	kf = KFold(len(training_labels), 10, indices=False)
+	klf = KFold(len(training_labels), 10, indices=False)
 	#X_train, X_valid, Y_train, Y_valid = cross-validation.train_test_split(training_data, training_labels, test_size=0.2, random_state=0)	
-	for train,test in kf:
+	for train,test in klf:
 		X_train, X_valid, y_train, y_valid = training_data[train], training_data[test], training_labels[train], training_labels[test]
 		svm.reset(X_train, X_valid, y_train, y_valid)
 		svm.seq_min_opt()

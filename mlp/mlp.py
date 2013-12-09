@@ -189,7 +189,9 @@ class MultiLayerPerceptron:
 		output = -Y.flatten()*self.a2
 
 		pos_ind = np.where(output >= 0)[0]
+		print pos_ind
 		neg_ind = np.where(output < 0)[0]
+		print neg_ind
 
 		pos_output = np.zeros(output.shape[0])
 		neg_output = np.zeros(output.shape[0])
