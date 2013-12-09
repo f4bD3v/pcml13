@@ -98,7 +98,7 @@ class MultiLayerPerceptron:
 		#print self.w2.shape
 		#print "dot z self.w2",np.dot(z, self.w2)
 		
-		self.a2 = np.dot(z, self.w2)+np.tile(self.b2, (curr_num_points,))
+		self.a2 = np.dot(z,self.w2)+np.tile(self.b2, (curr_num_points,))
 		#print "shape a2 ", self.a2.shape
 		#print "a2 ",self.a2
 		return
@@ -123,7 +123,7 @@ class MultiLayerPerceptron:
 		self.z = self.gatingf(a2km1, a2k)
 		#print self.z
 
-		self.a2 = np.dot(self.z, self.w2)+self.b2
+		self.a2 = np.dot(self.w2, self.z)+self.b2
 		#print "a2 ",self.a2
 		'''	
 		else: 
@@ -186,32 +186,36 @@ class MultiLayerPerceptron:
 		# forward pass for all
 		self.forward_prop_batch(X)
 		#self.prev_log_err = self.log_err
-		output = -Y.flatten()*self.a2
+		output = Y.flatten()*self.a2
 
 		pos_ind = np.where(output >= 0)[0]
 		print pos_ind
 		neg_ind = np.where(output < 0)[0]
+<<<<<<< HEAD
 		print neg_ind
+=======
+        print "negative iutputs ",neg_ind
+        print "positive iutputs ",pos_ind
+        pos_output = np.zeros(output.shape[0])
+        neg_output = np.zeros(output.shape[0])
+>>>>>>> 93ce258f7cbf95ff75589e0c82c6689e427976f2
 
-		pos_output = np.zeros(output.shape[0])
-		neg_output = np.zeros(output.shape[0])
-		pos_output[pos_ind] = output[pos_ind]
-		neg_output[neg_ind] = output[neg_ind]
+        pos_output[pos_ind] = output[pos_ind]
+        neg_output[neg_ind] = output[neg_ind]
 
-		pos_ind_err = pos_output+np.log(1.0+np.exp(-pos_output))
-		pos_ind_err[neg_ind] = 0
+        pos_ind_err = np.log(1.0+np.exp(-pos_output))
+        pos_ind_err[neg_ind] = 0
 
-		neg_ind_err = np.log(1.0+np.exp(neg_output))
-		neg_ind_err[pos_ind] = 0
-		#pos_ind_logerr = np.log(output[pos_ind]+np.exp(-output[pos_ind]))
-		#neg_ind_logerr = np.log()
+        neg_ind_err = -neg_output+np.log(1.0+np.exp(neg_output))
+        neg_ind_err[pos_ind] = 0
+        print "negative iutputs ", neg_ind_err
+        print "positive outputs ", pos_ind_err
+        log_err_is = pos_ind_err + neg_ind_err
+        curr_num_points = X.shape[0]
+        print curr_num_points
+        log_err = np.sum(log_err_is)/curr_num_points
 
-		log_err_is = pos_ind_err + neg_ind_err
-		curr_num_points = X.shape[0]
-		print curr_num_points
-		log_err = np.sum(log_err_is)/curr_num_points
-
-		return log_err
+        return log_err
 
 	def eval_train_err(self):
 
@@ -307,17 +311,17 @@ def main():
 	xormlp.gdescent()
 
 	'''
-	train_data = np.load('50_training_samples.npy')
-	train_labels = np.load('50_training_labels.npy')
-	#train_data = np.load('training_data.npy')
-	#train_labels = np.load('training_labels.npy')
+	#rain_data = np.load('50_training_samples.npy')
+	#train_labels = np.load('50_training_labels.npy')
+	train_data = np.load('training_data.npy')
+	train_labels = np.load('training_labels.npy')
 	valid_data = np.load('16_valid_samples.npy')
 	valid_labels = np.load('16_valid_labels.npy')
 
 	print train_data 
 	print len(train_data)
 	print train_labels
-	h1 = 40 
+	h1 = 10 
 	mlp = MultiLayerPerceptron(h1, train_data, train_labels, valid_data, valid_labels)
 	mlp.gdescent()
 
