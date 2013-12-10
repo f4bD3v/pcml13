@@ -62,6 +62,8 @@ class C_SupportVectorMachine:
 		print "i_up",i_up
 
 		print "f",self.f
+		print "filow",self.f[i_low]
+		print "fiup",self.f[i_up]
 		if self.f[i_low] <= self.f[i_up] + 2.0*self.tao:
 			i_low = -1
 			i_up = -1
@@ -188,6 +190,9 @@ class C_SupportVectorMachine:
 			print "alphas",self.alpha
 		return		
 
+		def classify():
+			return
+
 
 def main():
 
@@ -201,11 +206,12 @@ def main():
 	xor_labels = np.array([[1],[-1],[1],[-1]])
 	print "labels", xor_labels.shape
 
-	#svm.reset(xor_train, xor_train, xor_labels, xor_labels)
-	#svm.seq_min_opt()
+	svm.reset(xor_train, xor_train, xor_labels, xor_labels)
+	svm.seq_min_opt()
 
 	''' 
 		preprocessing: random permutation + normalization
+	'''
 	'''
 	training_data = np.load('svm_training_data.npy')
 	training_labels = np.load('svm_training_labels.npy')
@@ -226,6 +232,7 @@ def main():
 	test_data = np.load('svm_test_data.npy')
 
 	test_labels = np.load('svm_test_labels.npy')
+	'''
 
 	return
 
