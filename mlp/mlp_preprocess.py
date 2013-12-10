@@ -39,13 +39,12 @@ def main():
 	c_max = np.max(train_data)
 	c_min = np.min(train_data)
 
-	train_data[:,:] = (train_data[:,:]-c_min*1)/(c_max-c_min)
+	train_data = (train_data-c_min*1.0)/(c_max-c_min)
 	train_labels = perm_labels[0:train_len]
 
 	save_data(train_data, train_labels, 'training')
 
-
-	valid_data[:,:] = (valid_data[:,:]-c_min*1)/(c_max-c_min)
+	valid_data = (valid_data-c_min*1.0)/(c_max-c_min)
 	valid_labels = perm_labels[train_len:]
 
 	save_data(valid_data, valid_labels, 'validation')

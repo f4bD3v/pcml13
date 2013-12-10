@@ -61,7 +61,7 @@ class MultiLayerPerceptron:
 		self.dgb1 = np.zeros(self.b1.shape)
 		self.dgb2 = 0
 		self.eta = 0.01
-		self.mu = 0.15
+		self.mu = 0.2
 
 		'''
 			gdescent loop variables, errors
@@ -159,8 +159,8 @@ class MultiLayerPerceptron:
 	def log_res(self, label):
 		# labels - N x 1
 		dlabel = (label+1)/2
-		#self.r2 = self.sigmoidf(label*self.a2)-dlabel
-		self.r2 = -label*np.exp(-label*self.a2)*self.sigmoidf(label*self.a2)
+		self.r2 = self.sigmoidf(self.a2)-dlabel
+		#self.r2 = -label*np.exp(-label*self.a2)*self.sigmoidf(label*self.a2)
 		#rks_sigm = np.array([[self.w1s[i][k]*self.sigmoidf(self.a1s[i][k]) if (k%2==0) else self.w1s[i][k]*self.sigmoidf(self.a1s[i][k])*self.sigmoidf(-self.a1s[i][k]) for k in range(0,self.num_as)] for i in range(0, self.feature_dim)])
 		r1s_sigm = np.array([self.w2[math.floor(k/2)]*self.sigmoidf(self.a1s[k]) if (k%2==0) else self.w2[math.floor(k/2)]*self.a1s[k-1]*self.sigmoidf(self.a1s[k])*self.sigmoidf(-self.a1s[k]) for k in range(self.num_as)])
 		self.r1s = self.r2*r1s_sigm 
@@ -326,8 +326,8 @@ def main():
 	#train_labels = np.load('50_training_labels.npy')
 	train_data = np.load('training_data.npy')
 	train_labels = np.load('training_labels.npy')
-	valid_data = np.load('50_validation_data.npy')
-	valid_labels = np.load('50_validation_labels.npy')
+	valid_data = np.load('16_validation_data.npy')
+	valid_labels = np.load('16_validation_labels.npy')
 
 	print train_data 
 	print len(train_data)
