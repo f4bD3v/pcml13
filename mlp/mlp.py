@@ -40,6 +40,7 @@ class MultiLayerPerceptron:
 		'''
 
 		# w1s Nact x feature_dim 
+		# remove the for, add a coutner
 		self.w1s = np.array([[np.random.normal(0,1.0/self.feature_dim) for i in range(self.feature_dim)] for i in range(self.num_as)])
 		self.w2 = np.array([np.random.normal(0,1.0/self.h1) for i in range(0,self.h1)])
 
@@ -60,7 +61,7 @@ class MultiLayerPerceptron:
 		self.dgw2 = np.zeros(self.w2.shape)
 		self.dgb1 = np.zeros(self.b1.shape)
 		self.dgb2 = 0
-		self.eta = 0.01
+		self.eta = 0.005
 		self.mu = 0.2
 
 		'''
@@ -83,7 +84,7 @@ class MultiLayerPerceptron:
 	'''
 	def sigmoidf(self, x):
 		expx = np.exp(-x)	
-		return 1/(1+expx)
+		return 1./(1.+expx)
 
 	'''
 		gating function for pairs of activation values (vectors)
@@ -99,6 +100,7 @@ class MultiLayerPerceptron:
 
 		curr_num_points = curr_X.shape[0]
 		# dot() - for 2D arrays equivalent to matrix multiplication!
+		# check that!!!
 		print "b1 ", np.tile(self.b1, (curr_num_points, 1)).T.shape
 		self.a1s = np.dot(self.w1s,curr_X.T)+np.tile(self.b1, (curr_num_points, 1)).T
 		#print self.a1s
@@ -162,9 +164,11 @@ class MultiLayerPerceptron:
 		self.r2 = self.sigmoidf(self.a2)-dlabel
 		#self.r2 = -label*np.exp(-label*self.a2)*self.sigmoidf(label*self.a2)
 		#rks_sigm = np.array([[self.w1s[i][k]*self.sigmoidf(self.a1s[i][k]) if (k%2==0) else self.w1s[i][k]*self.sigmoidf(self.a1s[i][k])*self.sigmoidf(-self.a1s[i][k]) for k in range(0,self.num_as)] for i in range(0, self.feature_dim)])
-		r1s_sigm = np.array([self.w2[math.floor(k/2)]*self.sigmoidf(self.a1s[k]) if (k%2==0) else self.w2[math.floor(k/2)]*self.a1s[k-1]*self.sigmoidf(self.a1s[k])*self.sigmoidf(-self.a1s[k]) for k in range(self.num_as)])
-		self.r1s = self.r2*r1s_sigm 
+		r1s_sigm = np.array([self.w2[k/2]*self.sigmoidf(self.a1s[k+1]) if (k%2==0) else self.w2[k/2]*self.a1s[k-1]*np.exp(-self.a1s[(k+1)/2])*self.sigmoidf(self.a1s[(k+1)/2])*self.sigmoidf(self.a1s[(k+1)/2]) for k in range(self.num_as)])
+		#r12s_sigm = np.array([self.w2[math.floor(k/2)]*self.sigmoidf(self.a1s[k]) if (k%2==0) else self.w2[math.floor(k/2)]*self.a1s[k-1]*self.sigmoidf(self.a1s[k])*self.sigmoidf(-self.a1s[k]) for k in range(self.num_as)])
 
+		self.r1s = self.r2*r1s_sigm 
+		
 		return
 
 	def back_prop_online(self, i):
@@ -207,9 +211,12 @@ class MultiLayerPerceptron:
 		self.forward_prop_batch(X)
 		#self.prev_log_err = self.log_err
 		output = Y.flatten()*self.a2
+		
 
 		pos_ind = np.where(output >= 0)[0]
+		print len(pos_ind)
 		neg_ind = np.where(output < 0)[0]
+		print len(neg_ind)
 
 		pos_output = np.zeros(output.shape[0])
 		neg_output = np.zeros(output.shape[0])
@@ -326,8 +333,15 @@ def main():
 	#train_labels = np.load('50_training_labels.npy')
 	train_data = np.load('training_data.npy')
 	train_labels = np.load('training_labels.npy')
+<<<<<<< HEAD
 	valid_data = np.load('16_validation_data.npy')
 	valid_labels = np.load('16_validation_labels.npy')
+=======
+	#valid_data = np.load('50_validation_data.npy')
+	#valid_labels = np.load('50_validation_labels.npy')
+	valid_data = np.load('validation_data.npy')
+	valid_labels = np.load('validation_labels.npy')
+>>>>>>> 6bc0bbe6b99ff6c5605fc43e2a470b2ca6a6d683
 
 	print train_data 
 	print len(train_data)
