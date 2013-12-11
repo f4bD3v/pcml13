@@ -22,6 +22,8 @@ class C_SupportVectorMachine:
 	'''
 	def reset(self, X_train, X_valid, Y_train, Y_valid):
 		self.X = X_train
+		self.X_valid = X_valid
+		self.Y_valid = Y_valid
 		self.t = Y_train
 		self.num_patterns = self.X.shape[0]
 		self.alpha = np.zeros(self.num_patterns)
@@ -42,14 +44,21 @@ class C_SupportVectorMachine:
 		onen = np.ones(self.num_patterns)
 		XXT = np.dot(self.X, self.X.T)
 		d = np.diag(XXT)
-		print "d",d
-		print d.shape[0]
 		A = .5*np.outer(d,onen)+.5*np.outer(onen,d)-XXT
 		self.K = np.exp(-self.tao*A)
-		print self.K.shape
 		print "K", self.K
 		return
 
+	def set_K_class(self, svs):
+		svXT = np.dot(svs, self.X_valid.T)
+		print svXT
+		sq_norm_X = np.diag(np.dot(self.X_valid, self.X_valid.T))
+		sq_norm_sv = np.diag(np.dot(svs, svs.T))
+		sv_ones = np.ones(svs.shape[0])
+		X_ones = np.ones(self.X_valid.shape[0])
+		A = .5*np.outer(sv_ones,sq_norm_X)+.5*np.outer(sq_norm_sv, X_ones)-svXT
+		print A
+		self.K_class = np.exp(-self.tao*A).T
 	'''
 		select indices of most validated pair alpha_i, alpha_j
 	'''
@@ -110,6 +119,7 @@ class C_SupportVectorMachine:
 
 			mv_pair = self.select_mv_pair()
 			if self.rec_pair and self.rec_pair == mv_pair:
+				break
 				mv_pair = self.select_mv_pair()
 
 			self.rec_pair = mv_pair	
@@ -190,8 +200,13 @@ class C_SupportVectorMachine:
 			print "alphas",self.alpha
 		return		
 
-		def classify():
-			return
+	def classify(self):
+		sv_ind = np.where((self.alpha > 0) & (self.alpha < self.C))[0]
+		svs = self.X[sv_ind]
+		self.set_K_class(svs)
+		ys = np.dot(self.K_class,self.alpha[sv_ind]*self.t[sv_ind])+np.tile(self.b, svs.shape[0])
+
+		return ys
 
 
 def main():
@@ -202,19 +217,23 @@ def main():
 		XOR test
 	'''
 
+	'''
 	xor_train = np.array([[1,0],[0,0],[0,1],[1,1]])
 	xor_labels = np.array([[1],[-1],[1],[-1]])
 	print "labels", xor_labels.shape
 
 	svm.reset(xor_train, xor_train, xor_labels, xor_labels)
 	svm.seq_min_opt()
+	print svm.classify()
 
+	'''
 	''' 
 		preprocessing: random permutation + normalization
 	'''
-	'''
-	training_data = np.load('svm_training_data.npy')
-	training_labels = np.load('svm_training_labels.npy')
+
+	training_data = np.load('svm_50_training_data.npy')
+	print training_data[0]
+	training_labels = np.load('svm_50_training_labels.npy')
 
 	training_data[0]
 
@@ -226,13 +245,13 @@ def main():
 		print len(X_train)
 		svm.reset(X_train, X_valid, y_train, y_valid)
 		print y_train
-		svm.seq_min_opt()
+		#svm.seq_min_opt()
+		#print svm.classify()
 		break
 
 	test_data = np.load('svm_test_data.npy')
 
 	test_labels = np.load('svm_test_labels.npy')
-	'''
 
 	return
 

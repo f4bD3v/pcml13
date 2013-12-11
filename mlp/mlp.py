@@ -61,7 +61,7 @@ class MultiLayerPerceptron:
 		self.dgw2 = np.zeros(self.w2.shape)
 		self.dgb1 = np.zeros(self.b1.shape)
 		self.dgb2 = 0
-		self.eta = 0.005
+		self.eta = 0.02
 		self.mu = 0.2
 
 		'''
@@ -75,8 +75,10 @@ class MultiLayerPerceptron:
 		self.cvgc = 1E-8
 		self.cvg = False
 
-		self.log_err = np.empty(0)
+		self.train_err_arr = np.empty(0)
 		self.valid_err = 1E6
+		self.valid_err_arr = np.empty(0)
+		self.zerone = np.empty(0)
 
 	'''
 		sigmoid function
@@ -100,8 +102,6 @@ class MultiLayerPerceptron:
 
 		curr_num_points = curr_X.shape[0]
 		# dot() - for 2D arrays equivalent to matrix multiplication!
-		# check that!!!
-		print "b1 ", np.tile(self.b1, (curr_num_points, 1)).T.shape
 		self.a1s = np.dot(self.w1s,curr_X.T)+np.tile(self.b1, (curr_num_points, 1)).T
 		#print self.a1s
 		#a11 = np.dot(self.w1s[0],x[0])
@@ -164,8 +164,8 @@ class MultiLayerPerceptron:
 		self.r2 = self.sigmoidf(self.a2)-dlabel
 		#self.r2 = -label*np.exp(-label*self.a2)*self.sigmoidf(label*self.a2)
 		#rks_sigm = np.array([[self.w1s[i][k]*self.sigmoidf(self.a1s[i][k]) if (k%2==0) else self.w1s[i][k]*self.sigmoidf(self.a1s[i][k])*self.sigmoidf(-self.a1s[i][k]) for k in range(0,self.num_as)] for i in range(0, self.feature_dim)])
-		r1s_sigm = np.array([self.w2[k/2]*self.sigmoidf(self.a1s[k+1]) if (k%2==0) else self.w2[k/2]*self.a1s[k-1]*np.exp(-self.a1s[(k+1)/2])*self.sigmoidf(self.a1s[(k+1)/2])*self.sigmoidf(self.a1s[(k+1)/2]) for k in range(self.num_as)])
-		#r12s_sigm = np.array([self.w2[math.floor(k/2)]*self.sigmoidf(self.a1s[k]) if (k%2==0) else self.w2[math.floor(k/2)]*self.a1s[k-1]*self.sigmoidf(self.a1s[k])*self.sigmoidf(-self.a1s[k]) for k in range(self.num_as)])
+		#r1s_sigm = np.array([self.w2[k/2]*self.sigmoidf(self.a1s[k+1]) if (k%2==0) else self.w2[k/2]*self.a1s[k-1]*np.exp(-self.a1s[(k+1)/2])*self.sigmoidf(self.a1s[(k+1)/2])*self.sigmoidf(self.a1s[(k+1)/2]) for k in range(self.num_as)])
+		r1s_sigm = np.array([self.w2[k/2]*self.sigmoidf(self.a1s[k]) if (k%2==0) else self.w2[k/2]*self.a1s[k-1]*self.sigmoidf(self.a1s[k])*self.sigmoidf(-self.a1s[k]) for k in range(self.num_as)])
 
 		self.r1s = self.r2*r1s_sigm 
 		
@@ -209,14 +209,16 @@ class MultiLayerPerceptron:
 		'''
 		# forward pass for all
 		self.forward_prop_batch(X)
-		#self.prev_log_err = self.log_err
 		output = Y.flatten()*self.a2
 		
+		curr_num_points = X.shape[0]
 
-		pos_ind = np.where(output >= 0)[0]
-		print len(pos_ind)
-		neg_ind = np.where(output < 0)[0]
-		print len(neg_ind)
+		pos_ind = np.where(output > 0)[0]
+		cor_class = len(pos_ind)
+
+		neg_ind = np.where(output <= 0)[0]
+		zerone_err = np.sum(neg_ind)*1.0/curr_num_points
+		mis_class = len(neg_ind)
 
 		pos_output = np.zeros(output.shape[0])
 		neg_output = np.zeros(output.shape[0])
@@ -231,29 +233,64 @@ class MultiLayerPerceptron:
 		neg_ind_err[pos_ind] = 0
 
 		log_err_is = pos_ind_err + neg_ind_err
-		curr_num_points = X.shape[0]
-		print curr_num_points
 		log_err = np.sum(log_err_is)/curr_num_points
-		return log_err
+
+		return (log_err, mis_class, cor_class, zerone_err)
 
 	def eval_train_err(self):
-		log_err = self.eval_err(self.X, self.Y)
-		np.append(self.log_err, log_err)
-		print "train_err" ,log_err
+		ret = self.eval_err(self.X, self.Y)
+		self.train_err = ret[0]
+		self.train_mis_class = ret[1]*100.0/(self.X_valid.shape[0])
+		self.train_pos_class = ret[2]*100.0/(self.X_valid.shape[0])
+		self.train_err_arr = np.append(self.train_err_arr, self.train_err)
 		return
 
 	def eval_valid_err(self):
 		self.prev_valid_err = self.valid_err
-		self.valid_err = self.eval_err(self.X_valid, self.Y_valid)
-		print "valid_err", self.valid_err
+		ret = self.eval_err(self.X_valid, self.Y_valid)
+		self.valid_err = ret[0]
+		self.valid_mis_class = ret[1]*100.0/self.X_valid.shape[0]
+		self.valid_cor_class = ret[2]*100.0/self.X_valid.shape[0]
+		zerone_err = ret[3]
+		self.zerone = np.append(self.zerone, zerone_err)
+		self.valid_err_arr = np.append(self.valid_err_arr, self.valid_err)
 		return
 
 	def print_status(self):
-		print 'w1s',np.where(self.gw1 > 0)
-		print 'w2',self.gw2
-		print 'b1',self.gb1
-		print 'b2',self.gb2
+		print "train_err" ,self.train_err
+		print "valid_err", self.valid_err
 		return
+
+	def disp_results(self):
+		print "Results validation:"
+		print "perc. correct classifications: ",self.valid_cor_class
+		print "perc. misclassifications: ",self.valid_mis_class
+
+		X = np.linspace(1, self.epochs, self.epochs, endpoint=True)
+
+		plt.clf()
+		plt.plot(X, self.train_err_arr, color="blue", linewidth=1.0, linestyle='-', label="training error")
+		plt.plot(X, self.valid_err_arr, color="red", linewidth=1.0, linestyle='-', label="validation error")
+
+		plt.xlim(1, self.epochs)
+		plt.ylabel('error')
+		plt.xlabel('epochs')
+		plt.legend(loc='upper right')
+		plt.savefig('plots/mlp_plot.png')
+		plt.show()
+
+		print self.zerone
+		plt.clf()		
+		plt.plot(X, self.zerone, color="purple", linewidth=1.0, linestyle='-', label="zero one error")
+		plt.xlim(1, self.epochs)
+		plt.ylim(np.min(self.zerone)-10, np.max(self.zerone)+10)
+		plt.ylabel('zerone error')
+		plt.xlabel('epochs')
+		plt.legend(loc='upper right')
+		plt.show()
+
+		return
+
 
 	def gdescent(self):
 
@@ -261,8 +298,7 @@ class MultiLayerPerceptron:
 		while not self.cvg:
 
 			rand_perm = np.random.permutation(self.X.shape[0])
-			print "rand x perm",rand_perm
-			# pick random data point
+
 			for i in rand_perm:
 				'''
 				print self.w1s
@@ -273,25 +309,19 @@ class MultiLayerPerceptron:
 				self.num_iter+=1
 				self.forward_prop_online(i)
 				self.back_prop_online(i)
-				#self.print_status()
 
-
-			#print "iter ", self.num_iter
 			self.eval_train_err() # includes batch forward prop
 			self.eval_valid_err()
+			self.print_status()
 
 			self.epochs+=1
-			#self.eta-=.01
+			#self.eta-=.001
+			self.mu += 0.07
 
 			if self.valid_err > self.prev_valid_err:
 				print '*** Convergence after ', self.epochs, ' epochs ***'	
+				self.disp_results()
 				self.cvg = True
-			'''
-			if abs(self.prev_log_err - self.log_err) <= self.cvgc: 
-				print '*** Convergence after ', self.epochs, ' epochs ***'	self.cvg = True
-			'''
-
-			print "epochs: ",self.epochs
 
 			if self.epochs >= self.max_epochs:
 				print '*** Reached max. num of epochs', self.max_epochs, ' ***'
@@ -333,23 +363,25 @@ def main():
 	#train_labels = np.load('50_training_labels.npy')
 	train_data = np.load('training_data.npy')
 	train_labels = np.load('training_labels.npy')
-<<<<<<< HEAD
-	valid_data = np.load('16_validation_data.npy')
-	valid_labels = np.load('16_validation_labels.npy')
-=======
+	#valid_data = np.load('16_validation_data.npy')
+	#valid_labels = np.load('16_validation_labels.npy')
 	#valid_data = np.load('50_validation_data.npy')
 	#valid_labels = np.load('50_validation_labels.npy')
 	valid_data = np.load('validation_data.npy')
 	valid_labels = np.load('validation_labels.npy')
->>>>>>> 6bc0bbe6b99ff6c5605fc43e2a470b2ca6a6d683
+
+	test_data = np.load('test_data.npy')
+	test_labels = np.load('test_labels.npy')
 
 	print train_data 
 	print len(train_data)
 	print train_labels
 
-	h1 = 10
+	h1 = 15 
 	mlp = MultiLayerPerceptron(h1, train_data, train_labels, valid_data, valid_labels)
 	mlp.gdescent()
+	result = mlp.eval_err(test_data, test_labels)
+	print result
 
 	'''
 	mlp.forward_prop_online(1)
@@ -372,6 +404,26 @@ def main():
 	mlp = MultiLayerPerceptron(h1, feature_dim)
 	mlp.forward_prop(fake_x)
 	mlp.log_res(1)
+	'''
+
+	''' record
+	train_err 0.0365741141353
+	valid_err 0.0619260675686
+	*** Convergence after  5  epochs ***
+	train_err 0.0255103947063
+	valid_err 0.0532923952223
+	test_err 0.055956285193
+	*** Convergence after  6  epochs ***
+	train_err 0.032744899583
+valid_err 0.0629107588134
+*** Convergence after  6  epochs ***
+train_err 0.0334248445863
+valid_err 0.0561047951724
+*** Convergence after  6  epochs ***
+Results validation:
+perc. correct classifications:  97.95
+
+
 	'''
 
 	return

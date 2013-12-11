@@ -26,6 +26,7 @@ def main():
         data = d['Xtrain']    # Xtest for test data
         labels = d['Ytrain']  # Ytest for test labels
 
+
         print 'Finished loading',data.shape[0],'datapoints'
         print 'With',data.shape[1],'components each'
 
@@ -54,6 +55,12 @@ def main():
 
         save_data(valid_data, valid_labels, 'validation')
 
+        test_data = d['Xtest']
+        test_labels = d['Ytest']
+
+        test_data = (test_data-c_min*1.0)/(c_max-c_min)
+
+        save_data(test_data, test_labels, 'test')
         '''
                 downsample bitmaps
                 - take a subset of vectors with a subset of components
