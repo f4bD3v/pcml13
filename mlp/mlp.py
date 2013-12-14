@@ -315,8 +315,8 @@ class MultiLayerPerceptron:
 			self.print_status()
 
 			self.epochs+=1
-			#self.eta-=.001
-			self.mu += 0.07
+			self.eta-=.001
+			self.mu += 0.02
 
 			if self.valid_err > self.prev_valid_err:
 				print '*** Convergence after ', self.epochs, ' epochs ***'	
@@ -377,7 +377,7 @@ def main():
 	print len(train_data)
 	print train_labels
 
-	h1 = 15 
+	h1 = 65 
 	mlp = MultiLayerPerceptron(h1, train_data, train_labels, valid_data, valid_labels)
 	mlp.gdescent()
 	result = mlp.eval_err(test_data, test_labels)

@@ -36,13 +36,13 @@ def main():
 
 	print train_data
 	print np.where(train_data > 0)
-	print train_data[208]
+	print train_data[234]
 	c_max = np.max(train_data)
 	print c_max
 	c_min = np.min(train_data)
 	print c_min
 
-	train_data = (train_data-c_min*1.0)/(np.float64(c_max)-c_min)
+	train_data = (train_data-c_min*1.0)/(c_max-c_min)
 	print train_data 
 	print np.where(train_data > 0)
 	print train_data[234]
@@ -71,7 +71,7 @@ def main():
 		Save test_data
 	'''
 
-	test_data = (test_data-c_min*1)/(c_max-c_min)
+	test_data = (test_data-c_min*1.0)/(c_max-c_min)
 	save_data(test_data, test_labels, 'svm_test')	
 
 	return

@@ -5,11 +5,16 @@
 \subsubsection{Treatment of Data}
 
 \paragraph{Splitting}
+For the implementation of the SMO algorithm the training data had not to be split into fixed training and validation sets. Instead the imperative was to implement 10-fold crossvalidation for parameter selection of tao and C. In order to achieve this task and save time we used the KFold() method of the python scikit library. We split the data into 10 bins and talk one of them alternatingly as a validation set.
+Split dataset into k consecutive folds (without shuffling).
+
+Each fold is then used a validation set once while the k - 1 remaining fold form the training set.
 
 \paragraph{Preprocessing}
+Regarding preprocessing we used the same normalization as with the Multilayer Perceptron.
 
 \subsubsection{SVM setup}
-include all implementation details including choice of C and of $\tao$\\
+include all implementation details including choice of C and of $tao$\\
 evaluate 10-fold CV scores for all combinations of the matrix
 
 \subsection{Results}
