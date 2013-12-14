@@ -36,7 +36,6 @@ def main():
 
 	print train_data
 	print np.where(train_data > 0)
-	print train_data[234]
 	c_max = np.max(train_data)
 	print c_max
 	c_min = np.min(train_data)

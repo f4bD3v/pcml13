@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.io
 import math
+import matplotlib.pyplot as plt
+
 from sklearn.cross_validation import KFold
 
 '''
@@ -38,16 +40,18 @@ class C_SupportVectorMachine:
 		self.t= np.zeros(self.num_patterns, dtype=np.float64)
 		self.t = Y_train
 		self.alpha = np.zeros((self.num_patterns,1), dtype=np.float64)
-		print self.alpha.shape
+		#print self.alpha.shape
+		self.stop_coeff = 1E-4
 		self.set_K()
 		self.f = -self.t
 		# Ilow initialized as all indices of points with negative labels
 		self.Ilow = np.where(self.t < 0)[0]
 		# Iup initialized as all indices of points with negative labels
 		self.Iup = np.where(self.t > 0)[0]
-		#self.rec_pair = (-1,-1)
-		self.stop_coeff = 1E-8
+
+		self.curr_pair = (-1,-1)
 		self.iter = 0
+		self.criterions = np.empty(0)
 
 		return
 
@@ -60,21 +64,21 @@ class C_SupportVectorMachine:
 		d = np.diag(XXT)
 		A = .5*np.outer(d,onen)+.5*np.outer(onen,d)-XXT
 		self.K = np.exp(-self.tao*A)
-		print "K", self.K
+		#print "K", self.K
 		return
 
 	def set_K_class(self, svs):
 		XsvT = np.dot(self.X_valid, svs.T)
-		print XsvT
+		#print XsvT
 		sq_norm_X = np.diag(np.dot(self.X_valid, self.X_valid.T))
 		sq_norm_sv = np.diag(np.dot(svs, svs.T))
 		sv_ones = np.ones(svs.shape[0])
 		X_ones = np.ones(self.X_valid.shape[0])
-		print np.outer(sq_norm_X, sv_ones).shape
-		print np.outer(sq_norm_sv, X_ones).T.shape
-		print XsvT.shape
+		#print np.outer(sq_norm_X, sv_ones).shape
+		#print np.outer(sq_norm_sv, X_ones).T.shape
+		#print XsvT.shape
 		A = .5*np.outer(sq_norm_X, sv_ones)+.5*np.outer(X_ones, sq_norm_sv)-XsvT
-		print A
+		#print A
 		self.K_class = np.exp(-self.tao*A)
 
 	'''
@@ -82,34 +86,38 @@ class C_SupportVectorMachine:
 	'''
 	def select_mv_pair(self):
 		fi_low_max = np.argmax(self.f[self.Ilow])
-		print "fi_low_max", fi_low_max
+		#print "fi_low_max", fi_low_max
 		i_low = self.Ilow[fi_low_max]
-		print "i_low",i_low
+		#print "i_low",i_low
 		fi_up_min = np.argmin(self.f[self.Iup])
-		print "fi_up_min", fi_up_min
+		#print "fi_up_min", fi_up_min
 		i_up = self.Iup[fi_up_min]
-		print "i_up",i_up
+		#print "i_up",i_up
 
-		'''
-		if mv_pair == (i_low, i_up):
-			self.Ilow = np.delete(self.Ilow, i_low)
-			self.Iup = np.delete(self.Iup, i_up)
+		if self.curr_pair == (i_low, i_up):
+			i_low_ind = np.where(self.Ilow == i_low)[0]
+			print i_low_ind
+			print self.Ilow
+			self.Ilow = np.delete(self.Ilow, i_low_ind)
+			i_up_ind = np.where(self.Ilow == i_up)[0]
+			self.Iup = np.delete(self.Iup, i_up_ind)
 			fi_low_max = np.argmax(self.f[self.Ilow])
 			i_low = self.Ilow[fi_low_max]
-			print "i_low",i_low
 			fi_up_min = np.argmin(self.f[self.Iup])
 			i_up = self.Iup[fi_up_min]
-		'''
 
+		self.curr_pair = (i_low, i_up)
 		self.bup = self.f[i_up]
 		self.blow = self.f[i_low]
 
+		print self.blow
+		print self.bup
 		if self.blow <= self.bup + 2.0*self.stop_coeff:
 			i_low = -1
 			i_up = -1
+			self.curr_pair = (-1,-1)
 
-		# indices of most valuated pair
-		return (i_low, i_up)
+		return
 
 	def set_L_H(self, i, j):
 		sw = self.sigma*self.w
@@ -138,8 +146,14 @@ class C_SupportVectorMachine:
 
 	def eval_train_err(self):
 		# self.final_sv_ind
-		sv_ind = np.where((self.alpha > 0) & (self.alpha < self.C))[0]
-		self.train_err = np.dot(self.K[sv_ind, :].T, self.alpha[sv_ind]*self.t[sv_ind])+np.tile(self.b, self.X.shape[0])
+		sv_ind = np.where((self.alpha > 0) & (self.alpha <= self.C))[0]
+		self.train_err = np.dot(self.K[sv_ind, :].T, self.alpha[sv_ind]*self.t[sv_ind])+np.tile(self.b, (self.X.shape[0],1))
+
+		return
+
+	def eval_class_err(self, ys):
+		err = np.abs(ys - self.Y_valid)
+		self.class_err = np.sum(err)/self.X_valid.shape[0]*1.
 
 		return
 
@@ -156,15 +170,13 @@ class C_SupportVectorMachine:
 
 		while np.dot(self.alpha.T, self.t)==0.0:
 
-			mv_pair = self.select_mv_pair()
+			self.select_mv_pair()
 			#if self.rec_pair and self.rec_pair == mv_pair:
 			#mv_pair = self.select_mv_pair(mv_pair)
 
-			self.rec_pair = mv_pair	
-
-			print "index pair", mv_pair
-			i = mv_pair[0]
-			j = mv_pair[1]
+			#print "index pair", self.curr_pair
+			i = self.curr_pair[0]
+			j = self.curr_pair[1]
 
 			if j == -1:
 				self.eval_train_err
@@ -177,12 +189,12 @@ class C_SupportVectorMachine:
 			self.set_L_H(i,j)
 			#print self.K[i,i]
 			eta = self.K[i,i]+self.K[j,j]-2.*self.K[i,j]
-			#print eta
+			#print "eta",eta
 
 			nalphaj = 0.0
 			if eta > 10E-15:
 				unc_alphaj = self.alpha[j]+self.t[j]*(self.f[i]-self.f[j])/eta
-				print "unc_alpha",unc_alphaj
+				#print "unc_alpha",unc_alphaj
 				nalphaj = self.clip_unc_alpha(unc_alphaj)
 			# second derivative is negative
 			else:
@@ -196,7 +208,7 @@ class C_SupportVectorMachine:
 					nalphaj = self.L
 
 
-			self.print_status()
+			#self.print_status()
 
 			# New alpha_i
 
@@ -205,19 +217,19 @@ class C_SupportVectorMachine:
 			# update f
 
 			fd = self.t[i]*(nalphai-self.alpha[i])*self.K[:,i]+self.t[j]*(nalphaj-self.alpha[j])*self.K[:,j]
-			print "fd",fd
+			#print "fd",fd
 			# reshape f from (num_points,) to (num_points,1)
 			fdd = fd.reshape(fd.shape[0],1)
-			print "fdd",fdd
+			#print "fdd",fdd
 			self.f = self.f + fdd
-			print self.f
+			#print self.f
 
 			# Update alphas
 
 			self.alpha[i] = nalphai
 			self.alpha[j] = nalphaj
-			print "nalphaj", nalphaj
-			print "nalphai", nalphai
+			#print "nalphaj", nalphaj
+			#print "nalphai", nalphai
 
 			# update sets I_low, I_up
 			'''
@@ -233,38 +245,50 @@ class C_SupportVectorMachine:
 			'''
 
 			self.b = (self.bup+self.blow)/2
-			print "b", self.b
+			#print "b", self.b
 
-			print "Iup before",self.Iup
-			print "Ilow before",self.Ilow
+			#print "Iup before",self.Iup
+			#print "Ilow before",self.Ilow
 
 			Izero = np.where((self.alpha > 0) & (self.alpha < self.C))[0]
 
 			I_pos = np.where(((self.t == 1) & (self.alpha == 0)) | ((self.t == -1) & (self.alpha==self.C)))[0]
 			self.Iup = np.union1d(Izero, I_pos)
-			print "Iup", self.Iup
+			#print "Iup", self.Iup
 
 			I_neg = np.where(((self.t == -1) & (self.alpha == 0)) | ((self.t == 1) & (self.alpha==self.C)))[0]
 			self.Ilow = np.union1d(Izero, I_neg)
-			print "Ilow", self.Ilow 
+			#print "Ilow", self.Ilow 
 
-			print "alphas",self.alpha
+			#print "alphas",self.alpha
 
 			self.iter+=1
+			print self.iter
+			print self.curr_pair
+
+			if self.iter%20 == 0:
+				crit = abs(self.bup-self.blow)
+				self.criterions = np.append(self.criterions, crit)
+				# plot criterion
 			
 		return		
 
 	def classify(self):
 		sv_ind = np.where((self.alpha > 0) & (self.alpha <= self.C))[0]
-		print self.C
-		print "sv_ind", sv_ind
+	#	print self.C
+	#	print "sv_ind", sv_ind
 		svs = self.X[sv_ind, :]
-		print "svs",svs
+	#	print "svs",svs
 		self.set_K_class(svs)
-		print np.tile(self.b, (self.X_valid.shape[0],1))
 		ys = np.dot(self.K_class,self.alpha[sv_ind]*self.t[sv_ind])-np.tile(self.b, (self.X_valid.shape[0],1))
+		self.eval_class_err(ys)
+		self.class_output = np.sign(ys)
+		print "output", self.class_output
+		print "Y valid", self.Y_valid
+		self.score = len(np.where(self.class_output != self.Y_valid)[0])
+		#print "class",self.class_output
 
-		return np.sign(ys)
+		return
 
 
 def main():
@@ -288,36 +312,70 @@ def main():
 		preprocessing: random permutation + normalization
 	'''
 
-
-	training_data = np.load('svm_50_training_data.npy')
-	print training_data[0]
-	training_labels = np.load('svm_50_training_labels.npy')
+	training_data = np.load('svm_training_data.npy')
+	training_labels = np.load('svm_training_labels.npy')
 
 	training_data[0]
 
-	val_range = np.array([math.pow(2,i) for i in range(10)])
-	Cs = val_range/5.12E4
-	taos = np.array([math.pow(1,-i) for i in range(10)])
-	print taos
+	#val_range = np.array([math.pow(2,i) for i in range(10)])
+	length = 10
+	linC = np.linspace(0,9,length, endpoint = True)
+	Cs = np.power(2, linC)
 	print Cs
+	coeffs = np.array([np.power(2,i) for i in range(1,10)])
+	taos = coeffs*1E-3
+	print taos
 
-	for tao in taos:
-		for C in Cs: 
-			klf = KFold(len(training_labels), 10, indices=False)
-			#X_train, X_valid, Y_train, Y_valid = cross-validation.train_test_split(training_data, training_labels, test_size=0.2, random_state=0)	
+	k = 10
+
+	CVscores = np.zeros((len(taos), len(Cs)))
+	for i in range(len(taos)):
+		tao = taos[i]
+		for j in range(len(Cs)): 
+			C = Cs[j]
+			CV_err = 0
+
+			klf = KFold(len(training_labels), k, indices=False)
 
 			for train,cross_valid in klf:
-				X_train, X_valid, y_train, y_valid = training_data[train], training_data[cross_valid], training_labels[train], training_labels[cross_valid]
+				X_train, X_valid, Y_train, Y_valid = training_data[train], training_data[cross_valid], training_labels[train], training_labels[cross_valid]
 
-				print len(X_train)
-				svm.reset(X_train, X_valid, y_train, y_valid, tao, C)
-				print y_train
+				#print len(X_train)
+				svm.reset(X_train, X_valid, Y_train, Y_valid, tao, C)
 				svm.seq_min_opt()
-				print svm.classify()
-				break
+				svm.classify()
+				CV_err += svm.class_err
 
-			test_data = np.load('svm_test_data.npy')
-			test_labels = np.load('svm_test_labels.npy')
+			CV_err/=(k*1.)
+			print "CV valid. error", CV_err
+			CVscores[i,j] = svm.score 
+
+	print CVscores
+
+	plt.figure(1)
+	plt.title('10-fold CV scores')
+	im = plt.imshow(CVscores, interpolation='none', vmin=CVscores.min(), vmax=CVscores.max(), cmap='bone')
+	xloc = np.array(range(0,len(taos)))
+	yloc = np.int32(np.array(range(0, len(Cs))))
+	plt.xticks(xloc, taos, rotation=45)
+	plt.yticks(yloc, Cs)
+	plt.grid(True, which='minor', linestyle='-')
+	plt.colorbar()
+
+	min_ind_flat = np.argmin(CVscores)
+	min_ind = np.unravel_index(min_ind_flat, CVscores.shape)
+	print min_ind
+	print len(min_ind)
+	if len(min_ind) > 1:
+		np.min(min_ind)
+	else:
+		tao = taos[min_ind[0]]
+		print tao
+		C = Cs[min_ind[1]]
+		print C
+
+	test_data = np.load('svm_test_data.npy')
+	test_labels = np.load('svm_test_labels.npy')
 
 	return
 

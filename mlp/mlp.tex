@@ -18,19 +18,147 @@ The structure of the MLP we were advised to use through the project instructions
 	\caption{Schema of the MLP as described in the project instructions}
 \end{figure}
 \newline
-\textsc{\textbf{TODO}}\\
-Justify design and parameter choices\\
-Show comparative plots illustrating the effects of learning rate, number of hidden units, momentum, etc. on\\
-\begin{itemize}
-\item overfitting
-\item convergence speed
-\end{itemize}
-Comment on findings qualitatively
-
 \paragraph{Early stopping}
 Evaluate empirical error $\hat{R}(\hat{f};\mathcal{D}_V)$ for validation set $\mathcal{D}_V$ along-side the training-error $\hat{R}(\hat{f};\mathcal{D}_T)$while training the MLP on $\mathcal{D}_T$. Stop at the training at the epoch where the validation error stops decreasing and starts increasing. 
-\subsubsection{Parameters for subtasks}
+\newline
+Justify design and parameter choices\\
+Show comparative plots illustrating the effects of learning rate, number of hidden units, momentum, etc. on\\
 
-\subsubsection{Examples of overfitting}
+\paragraph{Effects of parameters on convergence speed}
+\textsc{classifiers not tested on test set, only on validation set}
+
+\begin{itemize}
+
+	\item effects of the learning rate $\eta$\\
+		\begin{figure}[!ht]
+		\centering
+		\begin{subfigure}[b]{.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{mlp/placeholder.png}
+		\caption{example subcaption}
+		\end{subfigure}
+		\quad
+		\begin{subfigure}[b]{.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{mlp/placeholder.png}
+		\caption{example subcaption}
+		\label{fig:subfigure2}
+		\end{subfigure}
+		\begin{subfigure}[b]{.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{mlp/placeholder.png}
+		\caption{example subcaption}
+		\label{fig:subfigure3}
+		\end{subfigure}
+		\quad
+		\begin{subfigure}[b]{.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{mlp/placeholder.png}
+		\caption{example subcaption}
+		\label{fig:subfigure4}
+		\end{subfigure}
+		\caption{Example caption}
+		\label{fig:example}
+		\end{figure}
+
+	\item Effects of number hidden units $h_1$
+		\begin{figure}[!ht]
+		\centering
+		\begin{subfigure}[b]{.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{mlp/placeholder.png}
+		\caption{example subcaption}
+		\end{subfigure}
+		\quad
+		\begin{subfigure}[b]{.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{mlp/placeholder.png}
+		\caption{example subcaption}
+		\label{fig:subfigure2}
+		\end{subfigure}
+		\caption{Example caption}
+		\label{fig:example}
+		\end{figure}
+
+	\item Effects of the momentum term	
+		\begin{figure}[!ht]
+		\centering
+		\begin{subfigure}[b]{.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{mlp/placeholder.png}
+		\caption{example subcaption}
+		\end{subfigure}
+		\quad
+		\begin{subfigure}[b]{.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{mlp/placeholder.png}
+		\caption{example subcaption}
+		\label{fig:subfigure2}
+		\end{subfigure}
+		\caption{Example caption}
+		\label{fig:example}
+		\end{figure}
+
+\end{itemize}
+
+\subsubsection{Effects of parameter choice on overfitting}
+show for which parameters training error decreases while validation increases
+	\begin{figure}[!ht]
+	\centering
+	\begin{subfigure}[b]{.45\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{mlp/placeholder.png}
+	\caption{example subcaption}
+	\end{subfigure}
+	\quad
+	\begin{subfigure}[b]{.45\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{mlp/placeholder.png}
+	\caption{example subcaption}
+	\label{fig:subfigure2}
+	\end{subfigure}
+	\caption{Example caption}
+	\label{fig:example}
+	\end{figure}
+
+include \textsc{typical} example of overfitting by letting the validation error increase while the training error decreases for a few, say 3, rounds!
+
+\subsubsection{Determining parameters for binary subtasks}
+
+\begin{figure}[!ht]
+	\centering
+		\begin{subfigure}[b]{.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{mlp/placeholder.png}
+		\caption{example subcaption}
+		\end{subfigure}
+	\quad
+	\begin{subfigure}[b]{.45\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{mlp/placeholder.png}
+	\caption{example subcaption}
+	\label{fig:subfigure2}
+	\end{subfigure}
+	\begin{subfigure}[b]{.45\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{mlp/placeholder.png}
+	\caption{example subcaption}
+	\end{subfigure}
+	\quad
+	\begin{subfigure}[b]{.45\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{mlp/placeholder.png}
+	\caption{example subcaption}
+	\label{fig:subfigure2}
+	\end{subfigure}
+	\caption{Example caption}
+	\label{fig:example}
+\end{figure}
+
+\textsc{Comment on findings \textbf{qualitatively}}		
 
 \section{Results}
+	plots annotated by the result of the final classifier on the test set
+	\subsection{Discussion of performance on test set}
+
+	\subsection{Misclassified patterns}
