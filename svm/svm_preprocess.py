@@ -42,9 +42,6 @@ def main():
 	print c_min
 
 	train_data = (train_data-c_min*1.0)/(c_max-c_min)
-	print train_data 
-	print np.where(train_data > 0)
-	print train_data[234]
 
 	# WRONG train_data[:,:] = (train_data[:,:]-c_min*1.0)/(c_max-c_min)
 

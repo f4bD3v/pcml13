@@ -51,7 +51,10 @@ class C_SupportVectorMachine:
 
 		self.curr_pair = (-1,-1)
 		self.iter = 0
+		self.iters = np.empty(0)
 		self.criterions = np.empty(0)
+		self.zerone_train = np.empty(0)
+		self.zerone_valid = np.empty(0)
 
 		return
 
@@ -154,7 +157,22 @@ class C_SupportVectorMachine:
 	def eval_class_err(self, ys):
 		err = np.abs(ys - self.Y_valid)
 		self.class_err = np.sum(err)/self.X_valid.shape[0]*1.
+		
+		return
 
+	def eval_plot(self):
+		'''
+		plt.figure(0)
+		plt.title('SVM criterion, abs(bup-blow)')
+		im = plt.imshow(scores, interpolation='none', vmin=scores.min(), vmax=scores.max(), cmap='bone_r')
+		xloc = np.array(range(scores.shape[0]))
+		yloc = np.array(range(scores.shape[1]))
+		plt.xticks(xloc, taos, rotation=45)
+		plt.yticks(yloc, Cs)
+		plt.grid(True, which='minor', linestyle='-')
+		plt.colorbar()
+		pl
+		'''
 		return
 
 	def print_status(self):
@@ -263,12 +281,13 @@ class C_SupportVectorMachine:
 			#print "alphas",self.alpha
 
 			self.iter+=1
-			print self.iter
-			print self.curr_pair
+			#print self.iter
+			#print self.curr_pair
 
 			if self.iter%20 == 0:
 				crit = abs(self.bup-self.blow)
 				self.criterions = np.append(self.criterions, crit)
+				self.iters = np.append(self.iters, iter)
 				# plot criterion
 			
 		return		
@@ -283,13 +302,52 @@ class C_SupportVectorMachine:
 		ys = np.dot(self.K_class,self.alpha[sv_ind]*self.t[sv_ind])-np.tile(self.b, (self.X_valid.shape[0],1))
 		self.eval_class_err(ys)
 		self.class_output = np.sign(ys)
-		print "output", self.class_output
-		print "Y valid", self.Y_valid
+		#print "output", self.class_output
+		#print "Y valid", self.Y_valid
 		self.score = len(np.where(self.class_output != self.Y_valid)[0])
+		self.zerone_valid = np.append(self.zerone_valid, self.score)
+		misclass_error = (self.score*100.)/(self.Y_valid.shape[0])
+		print "misclass error",misclass_error
+		print "success perc.",(100-misclass_error)
 		#print "class",self.class_output
 
 		return
 
+
+def CV(svm, training_data, training_labels, taos, Cs, k):
+
+	CVscores = np.zeros((len(taos), len(Cs)))
+	for i in range(len(taos)):
+		tao = taos[i]
+		for j in range(len(Cs)): 
+			C = Cs[j]
+			CV_err = 0
+			score = 0
+
+			klf = KFold(len(training_labels), k, indices=False)
+
+			for train,cross_valid in klf:
+				X_train, X_valid, Y_train, Y_valid = training_data[train], training_data[cross_valid], training_labels[train], training_labels[cross_valid]
+				print "num X train",len(X_train)
+				print "num Y train",len(Y_train)
+				print "num X valid",len(X_valid)
+				print "num Y valid",len(Y_valid)
+
+				#print len(X_train)
+				svm.reset(X_train, X_valid, Y_train, Y_valid, tao, C)
+				svm.seq_min_opt()
+				svm.classify()
+				print "score", svm.score
+				score += svm.score
+				CV_err += svm.class_err
+
+			CV_err/=(k*1.)
+			print "CV valid. error", CV_err
+			CVscores[i,j] = score
+
+	np.save('CVscores_'+str(k)+'_fold', CVscores)
+
+	return
 
 def main():
 
@@ -315,56 +373,30 @@ def main():
 	training_data = np.load('svm_training_data.npy')
 	training_labels = np.load('svm_training_labels.npy')
 
-	training_data[0]
-
-	#val_range = np.array([math.pow(2,i) for i in range(10)])
 	length = 10
-	linC = np.linspace(0,9,length, endpoint = True)
+	linC = np.linspace(0,length-1, length, endpoint = True)
 	Cs = np.power(2, linC)
-	print Cs
-	coeffs = np.array([np.power(2,i) for i in range(1,10)])
+	coeffs = np.array([np.power(2,i) for i in range(1,length)])
 	taos = coeffs*1E-3
-	print taos
 
-	k = 10
-
-	CVscores = np.zeros((len(taos), len(Cs)))
-	for i in range(len(taos)):
-		tao = taos[i]
-		for j in range(len(Cs)): 
-			C = Cs[j]
-			CV_err = 0
-
-			klf = KFold(len(training_labels), k, indices=False)
-
-			for train,cross_valid in klf:
-				X_train, X_valid, Y_train, Y_valid = training_data[train], training_data[cross_valid], training_labels[train], training_labels[cross_valid]
-
-				#print len(X_train)
-				svm.reset(X_train, X_valid, Y_train, Y_valid, tao, C)
-				svm.seq_min_opt()
-				svm.classify()
-				CV_err += svm.class_err
-
-			CV_err/=(k*1.)
-			print "CV valid. error", CV_err
-			CVscores[i,j] = svm.score 
-
-	print CVscores
+	CV(svm, training_data, training_labels, taos, Cs, 10)
+	scores = np.load('CV_scores.npy')
 
 	plt.figure(1)
 	plt.title('10-fold CV scores')
-	im = plt.imshow(CVscores, interpolation='none', vmin=CVscores.min(), vmax=CVscores.max(), cmap='bone')
-	xloc = np.array(range(0,len(taos)))
-	yloc = np.int32(np.array(range(0, len(Cs))))
+	im = plt.imshow(scores, interpolation='none', vmin=scores.min(), vmax=scores.max(), cmap='bone_r')
+	xloc = np.array(range(scores.shape[0]))
+	yloc = np.array(range(scores.shape[1]))
 	plt.xticks(xloc, taos, rotation=45)
 	plt.yticks(yloc, Cs)
 	plt.grid(True, which='minor', linestyle='-')
 	plt.colorbar()
+	plt.show()
 
-	min_ind_flat = np.argmin(CVscores)
-	min_ind = np.unravel_index(min_ind_flat, CVscores.shape)
+	min_ind_flat = np.argmin(scores)
+	min_ind = np.unravel_index(min_ind_flat, scores.shape)
 	print min_ind
+	'''	
 	print len(min_ind)
 	if len(min_ind) > 1:
 		np.min(min_ind)
@@ -373,9 +405,19 @@ def main():
 		print tao
 		C = Cs[min_ind[1]]
 		print C
+		'''
+	print min_ind[0]+1
+	tau = taos[min_ind[0]+1]
+	print tau
+	C = Cs[min_ind[1]+4]
+	print C
 
 	test_data = np.load('svm_test_data.npy')
 	test_labels = np.load('svm_test_labels.npy')
+
+	svm.reset(training_data, test_data, training_labels, test_labels, tau, C)
+	svm.seq_min_opt()
+	svm.classify()
 
 	return
 

@@ -61,7 +61,7 @@ class MultiLayerPerceptron:
 		self.dgw2 = np.zeros(self.w2.shape)
 		self.dgb1 = np.zeros(self.b1.shape)
 		self.dgb2 = 0
-		self.eta = 0.02
+		self.eta = 0.015
 		self.mu = 0.2
 
 		'''
@@ -315,7 +315,7 @@ class MultiLayerPerceptron:
 			self.print_status()
 
 			self.epochs+=1
-			self.eta-=.001
+			#self.eta-=.001
 			self.mu += 0.02
 
 			if self.valid_err > self.prev_valid_err:

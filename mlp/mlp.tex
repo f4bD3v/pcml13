@@ -13,47 +13,47 @@ Preprocessing of the created training and validation as well as the test set was
 The structure of the MLP we were advised to use through the project instructions is depicted in Fig. \ref{fig:mlp}. The differences to the two-layer MLP discussed in the lecture lie in the following properties: Firstly, the first hidden layer has double the outputs of a "normal" MLP perceptron. Secondly, the gating function $g(a_{2k+1}, a_{2k})$ takes pairs of values from the hidden layer accordingly and last but not least the last activation value is not passed through another gating function.
 \begin{figure}[!h]
 	\centering
-	\includegraphics[width=.8\textwidth]{mlp/mlp.eps}
+	\includegraphics[width=.6\textwidth]{mlp/mlp.eps}
 	\label{mlp}
 	\caption{Schema of the MLP as described in the project instructions}
 \end{figure}
 \newline
-\paragraph{Early stopping}
-Evaluate empirical error $\hat{R}(\hat{f};\mathcal{D}_V)$ for validation set $\mathcal{D}_V$ along-side the training-error $\hat{R}(\hat{f};\mathcal{D}_T)$while training the MLP on $\mathcal{D}_T$. Stop at the training at the epoch where the validation error stops decreasing and starts increasing. 
-\newline
-Justify design and parameter choices\\
-Show comparative plots illustrating the effects of learning rate, number of hidden units, momentum, etc. on\\
+%
+%\paragraph{Early stopping}
+%Evaluate empirical error $\hat{R}(\hat{f};\mathcal{D}_V)$ for validation set $\mathcal{D}_V$ along-side the training-error $\hat{R}(\hat{f};\mathcal{D}_T)$while training the MLP on $\mathcal{D}_T$. Stop at the training at the epoch where the validation error stops decreasing and starts increasing. 
+%Justify design and parameter choices\\
+%Show comparative plots illustrating the effects of learning rate, number of hidden units, momentum, etc. on\\
 
 \paragraph{Effects of parameters on convergence speed}
 \textsc{classifiers not tested on test set, only on validation set}
 
 \begin{itemize}
 
-	\item effects of the learning rate $\eta$\\
+	\item effects of the learning rate $\eta$ and momentum term\\
 		\begin{figure}[!ht]
 		\centering
 		\begin{subfigure}[b]{.45\textwidth}
 		\centering
-		\includegraphics[width=\textwidth]{mlp/placeholder.png}
-		\caption{example subcaption}
+		\includegraphics[width=\textwidth]{mlp/plots/effect_eta_small.eps}
+		\caption{Error }
 		\end{subfigure}
 		\quad
 		\begin{subfigure}[b]{.45\textwidth}
 		\centering
-		\includegraphics[width=\textwidth]{mlp/placeholder.png}
+		\includegraphics[width=\textwidth]{mlp/plots/effect_eta_larger.eps}
 		\caption{example subcaption}
 		\label{fig:subfigure2}
 		\end{subfigure}
 		\begin{subfigure}[b]{.45\textwidth}
 		\centering
-		\includegraphics[width=\textwidth]{mlp/placeholder.png}
+		\includegraphics[width=\textwidth]{mlp/plots/effect_eta_decrease.eps}
 		\caption{example subcaption}
 		\label{fig:subfigure3}
 		\end{subfigure}
 		\quad
 		\begin{subfigure}[b]{.45\textwidth}
 		\centering
-		\includegraphics[width=\textwidth]{mlp/placeholder.png}
+		\includegraphics[width=\textwidth]{mlp/plots/effect_momentum.eps}
 		\caption{example subcaption}
 		\label{fig:subfigure4}
 		\end{subfigure}
@@ -66,35 +66,30 @@ Show comparative plots illustrating the effects of learning rate, number of hidd
 		\centering
 		\begin{subfigure}[b]{.45\textwidth}
 		\centering
-		\includegraphics[width=\textwidth]{mlp/placeholder.png}
+		\includegraphics[width=\textwidth]{mlp/plots/30h1.eps}
 		\caption{example subcaption}
 		\end{subfigure}
 		\quad
 		\begin{subfigure}[b]{.45\textwidth}
 		\centering
-		\includegraphics[width=\textwidth]{mlp/placeholder.png}
+		\includegraphics[width=\textwidth]{mlp/plots/65h1.eps}
 		\caption{example subcaption}
 		\label{fig:subfigure2}
-		\end{subfigure}
-		\caption{Example caption}
-		\label{fig:example}
-		\end{figure}
-
-	\item Effects of the momentum term	
-		\begin{figure}[!ht]
-		\centering
-		\begin{subfigure}[b]{.45\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{mlp/placeholder.png}
-		\caption{example subcaption}
 		\end{subfigure}
 		\quad
 		\begin{subfigure}[b]{.45\textwidth}
 		\centering
-		\includegraphics[width=\textwidth]{mlp/placeholder.png}
+		\includegraphics[width=\textwidth]{mlp/plots/30h1_tuned.eps}
 		\caption{example subcaption}
-		\label{fig:subfigure2}
+		\label{fig:subfigure1}
 		\end{subfigure}
+		\quad
+		\begin{subfigure}[b]{.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{mlp/plots/65h1_tuned.eps}
+		\caption{example subcaption}
+		\label{fig:subfigure3}
+		\end{subfigure}	
 		\caption{Example caption}
 		\label{fig:example}
 		\end{figure}
@@ -115,10 +110,9 @@ show for which parameters training error decreases while validation increases
 	\centering
 	\includegraphics[width=\textwidth]{mlp/placeholder.png}
 	\caption{example subcaption}
-	\label{fig:subfigure2}
 	\end{subfigure}
 	\caption{Example caption}
-	\label{fig:example}
+	\label{fig:overfiting}
 	\end{figure}
 
 include \textsc{typical} example of overfitting by letting the validation error increase while the training error decreases for a few, say 3, rounds!
@@ -127,34 +121,37 @@ include \textsc{typical} example of overfitting by letting the validation error 
 
 \begin{figure}[!ht]
 	\centering
-		\begin{subfigure}[b]{.45\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{mlp/placeholder.png}
-		\caption{example subcaption}
-		\end{subfigure}
-	\quad
 	\begin{subfigure}[b]{.45\textwidth}
 	\centering
-	\includegraphics[width=\textwidth]{mlp/placeholder.png}
+	\includegraphics[width=\textwidth]{mlp/plots/4-9_tuned_97_75.eps}
 	\caption{example subcaption}
-	\label{fig:subfigure2}
-	\end{subfigure}
-	\begin{subfigure}[b]{.45\textwidth}
-	\centering
-	\includegraphics[width=\textwidth]{mlp/placeholder.png}
-	\caption{example subcaption}
+	\label{fig:4_9_tuned}
 	\end{subfigure}
 	\quad
 	\begin{subfigure}[b]{.45\textwidth}
 	\centering
-	\includegraphics[width=\textwidth]{mlp/placeholder.png}
+	\includegraphics[width=\textwidth]{mlp/plots/3-5_tuned_97_75.eps}
 	\caption{example subcaption}
-	\label{fig:subfigure2}
+	\label{fig:3_5_tuned}
 	\end{subfigure}
-	\caption{Example caption}
-	\label{fig:example}
-\end{figure}
+	\quad
+	\begin{subfigure}[b]{.45\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{mlp/plots/zerone_optimize_4_9.eps}
+	\caption{example subcaption}
+	\label{fig:4_9_tuned_zerone}
+	\end{subfigure}
+	\quad
+	\begin{subfigure}[b]{.45\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{mlp/plots/zerone_optimize_3_5.eps}
+	\caption{example subcaption}
+	\label{fig:3_5_tuned_zerone}
+	\end{subfigure}
 
+	\caption{zerone}
+	\label{fig:binary_subtasks}
+\end{figure}
 \textsc{Comment on findings \textbf{qualitatively}}		
 
 \section{Results}
@@ -162,3 +159,26 @@ include \textsc{typical} example of overfitting by letting the validation error 
 	\subsection{Discussion of performance on test set}
 
 	\subsection{Misclassified patterns}
+	\ref{fig:misclass_3} shows a misclassified point where ti*a2 is close to 0.
+The actual label is -1, meaning that the data point represents a 9. The fact that is was misclassified by little  means that the model finds enough similarities with a 4. \ref{fig:misclass_4} shows a misclassified point where ti*a2 is far from 0.
+The actual label is -1, the data point if for a 9. yet, the fact that a2 was greater than zero means the classifier sees it as a clear 4.
+The point is actually an outlier from the "4 class" to the "9 class".
+	\begin{figure}[!ht]
+	\centering
+	\begin{subfigure}[b]{.45\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{mlp/plots/misclassified_fig3.png}
+	\label{fig:misclass_3}
+	\caption{9 just about misclassified as a 4}
+	\end{subfigure}
+	\quad
+	\begin{subfigure}[b]{.45\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{mlp/plots/misclassified_fig4.png}
+	\label{fig:misclass_4}
+	\caption{9 clearly mistaken as a 4 by classifier}
+	\end{subfigure}
+	\caption{Examples of misclassified patterns for 4-9 problem}
+	\label{fig:misclassification}
+	\end{figure}
+
