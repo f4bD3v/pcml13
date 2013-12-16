@@ -61,7 +61,7 @@ class MultiLayerPerceptron:
 		self.dgw2 = np.zeros(self.w2.shape)
 		self.dgb1 = np.zeros(self.b1.shape)
 		self.dgb2 = 0
-		self.eta = 0.015
+		self.eta = 0.01
 		self.mu = 0.2
 
 		'''
@@ -315,8 +315,7 @@ class MultiLayerPerceptron:
 			self.print_status()
 
 			self.epochs+=1
-			#self.eta-=.001
-			self.mu += 0.02
+			self.eta-=1./self.X[0].shape[0]
 
 			if self.valid_err > self.prev_valid_err:
 				print '*** Convergence after ', self.epochs, ' epochs ***'	
@@ -382,29 +381,6 @@ def main():
 	mlp.gdescent()
 	result = mlp.eval_err(test_data, test_labels)
 	print result
-
-	'''
-	mlp.forward_prop_online(1)
-	mlp.back_prop_online(1)
-	print "z: ",mlp.z
-	print mlp.r2
-	print mlp.gw2
-	print mlp.b2
-
-	print np.max(mlp.gw1)
-	'''
-	'''	
-	feature_dim = 784 # length(x)
-
-	fake_x = np.array([np.random.normal(.5,.25) for i in range(0,784)])
-
-	h1 = 10
-	Nact = 2*h1
-	# initialize w1q and w2q
-	mlp = MultiLayerPerceptron(h1, feature_dim)
-	mlp.forward_prop(fake_x)
-	mlp.log_res(1)
-	'''
 
 	''' record
 	train_err 0.0365741141353

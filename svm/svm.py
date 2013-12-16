@@ -53,6 +53,7 @@ class C_SupportVectorMachine:
 		self.iter = 0
 		self.iters = np.empty(0)
 		self.criterions = np.empty(0)
+		self.violations = np.empty(0)
 		self.zerone_train = np.empty(0)
 		self.zerone_valid = np.empty(0)
 
@@ -113,8 +114,8 @@ class C_SupportVectorMachine:
 		self.bup = self.f[i_up]
 		self.blow = self.f[i_low]
 
-		print self.blow
-		print self.bup
+		#print self.blow
+		#print self.bup
 		if self.blow <= self.bup + 2.0*self.stop_coeff:
 			i_low = -1
 			i_up = -1
@@ -150,29 +151,45 @@ class C_SupportVectorMachine:
 	def eval_train_err(self):
 		# self.final_sv_ind
 		sv_ind = np.where((self.alpha > 0) & (self.alpha <= self.C))[0]
-		self.train_err = np.dot(self.K[sv_ind, :].T, self.alpha[sv_ind]*self.t[sv_ind])+np.tile(self.b, (self.X.shape[0],1))
+		ys = np.dot(self.K[sv_ind, :].T, self.alpha[sv_ind]*self.t[sv_ind])+np.tile(self.b, (self.X.shape[0],1))
+		self.train_output = np.sign(ys)
+		self.train_score = len(np.where(self.train_output != self.Y_valid)[0])/self.Y_valid[0]
 
 		return
 
-	def eval_class_err(self, ys):
-		err = np.abs(ys - self.Y_valid)
-		self.class_err = np.sum(err)/self.X_valid.shape[0]*1.
+	def eval_class_err(self):
+		sv_ind = np.where((self.alpha > 0) & (self.alpha <= self.C))[0]
+		svs = self.X[sv_ind, :]
+		self.set_K_class(svs)
+		ys = np.dot(self.K_class,self.alpha[sv_ind]*self.t[sv_ind])-np.tile(self.b, (self.X_valid.shape[0],1))
+		self.class_output = np.sign(ys)
+		self.score = len(np.where(self.class_output != self.Y_valid)[0])
+
+		return
 		
-		return
 
 	def eval_plot(self):
-		'''
-		plt.figure(0)
+		print self.iters
+		print self.criterions
+		print self.violations
+		plt.figure('Criterion')
+		plt.title('SVM criterion')
+		plt.plot(self.iters, self.criterions, color="blue", label="SVM criterion")
+		plt.xlim(1, self.iters[-1])
+		plt.xlabel('iterations')
+		plt.ylabel('$\Phi$')
+		plt.legend(loc='upper right')
+		plt.show()
+
+		plt.figure('Violations')
 		plt.title('SVM criterion, abs(bup-blow)')
-		im = plt.imshow(scores, interpolation='none', vmin=scores.min(), vmax=scores.max(), cmap='bone_r')
-		xloc = np.array(range(scores.shape[0]))
-		yloc = np.array(range(scores.shape[1]))
-		plt.xticks(xloc, taos, rotation=45)
-		plt.yticks(yloc, Cs)
-		plt.grid(True, which='minor', linestyle='-')
-		plt.colorbar()
-		pl
-		'''
+		plt.plot(self.iters, self.violations, color="red", label="criterion based on violations")
+		plt.xlabel('iterations')
+		plt.ylabel('$\Phi$')
+		plt.yscale('log')
+		plt.legend(loc='upper right')
+		plt.show()
+
 		return
 
 	def print_status(self):
@@ -216,6 +233,7 @@ class C_SupportVectorMachine:
 				nalphaj = self.clip_unc_alpha(unc_alphaj)
 			# second derivative is negative
 			else:
+				print "hello"
 				vi = self.f[i]+self.t[i]-self.alpha[i]*self.t[i]*self.K[i,i]-self.alpha[j]*self.t[j]*self.K[i,j]
 				vj = self.f[j]+self.t[j]-self.alpha[i]*self.t[i]*self.K[i,j]-self.alpha[j]*self.t[j]*self.K[j,j]
 				phiH = self.eval_phi_H(i,j, vi, vj)
@@ -285,31 +303,27 @@ class C_SupportVectorMachine:
 			#print self.curr_pair
 
 			if self.iter%20 == 0:
-				crit = abs(self.bup-self.blow)
-				self.criterions = np.append(self.criterions, crit)
-				self.iters = np.append(self.iters, iter)
-				# plot criterion
-			
+				viol_crit = abs(self.bup-self.blow)
+				phi = 1./2*np.sum(self.alpha*(self.t*self.f)-self.alpha)
+				phi = np.sum(1./2*np.dot(np.outer(self.alpha*self.t, self.alpha*self.t), self.K.T)-self.alpha)
+				self.iters = np.append(self.iters, self.iter)
+				self.criterions = np.append(self.criterions, phi)
+				self.violations = np.append(self.violations, viol_crit)
+
 		return		
 
 	def classify(self):
 		sv_ind = np.where((self.alpha > 0) & (self.alpha <= self.C))[0]
-	#	print self.C
-	#	print "sv_ind", sv_ind
-		svs = self.X[sv_ind, :]
-	#	print "svs",svs
-		self.set_K_class(svs)
-		ys = np.dot(self.K_class,self.alpha[sv_ind]*self.t[sv_ind])-np.tile(self.b, (self.X_valid.shape[0],1))
-		self.eval_class_err(ys)
-		self.class_output = np.sign(ys)
-		#print "output", self.class_output
-		#print "Y valid", self.Y_valid
-		self.score = len(np.where(self.class_output != self.Y_valid)[0])
-		self.zerone_valid = np.append(self.zerone_valid, self.score)
+		self.eval_train_err()
+		self.eval_class_err()
+		self.zerone_train = 1.*self.train_score/self.Y_valid.shape[0]
+		self.zerone_valid = 1.*self.score/self.Y_valid.shape[0]
+		print "zerone train",self.zerone_train
+		print "zerone valid",self.zerone_valid
 		misclass_error = (self.score*100.)/(self.Y_valid.shape[0])
 		print "misclass error",misclass_error
 		print "success perc.",(100-misclass_error)
-		#print "class",self.class_output
+		self.eval_plot()
 
 		return
 
@@ -374,28 +388,34 @@ def main():
 	training_labels = np.load('svm_training_labels.npy')
 
 	length = 10
-	linC = np.linspace(0,length-1, length, endpoint = True)
+	linC = np.linspace(0,length-2, length-1, endpoint = True)
 	Cs = np.power(2, linC)
-	coeffs = np.array([np.power(2,i) for i in range(1,length)])
+	coeffs = np.array([np.power(2,i) for i in range(1,length-1)])
 	taos = coeffs*1E-3
+	print len(taos)
 
-	CV(svm, training_data, training_labels, taos, Cs, 10)
-	scores = np.load('CV_scores.npy')
+	#CV(svm, training_data, training_labels, taos, Cs, 10)
+	scores = np.load('CVscores_10_fold.npy')
 
 	plt.figure(1)
 	plt.title('10-fold CV scores')
-	im = plt.imshow(scores, interpolation='none', vmin=scores.min(), vmax=scores.max(), cmap='bone_r')
-	xloc = np.array(range(scores.shape[0]))
-	yloc = np.array(range(scores.shape[1]))
-	plt.xticks(xloc, taos, rotation=45)
-	plt.yticks(yloc, Cs)
+	print scores.shape
+	im = plt.imshow(scores, interpolation='none', vmin = 0, vmax = 300, cmap='bone_r')
+	yloc = np.array(range(scores.shape[0]))
+	xloc = np.array(range(scores.shape[1]))
+	plt.xticks(xloc, Cs, rotation=45)
+	plt.yticks(yloc, taos)
+	plt.xlabel('C')
+	plt.ylabel('$\\tau$')
 	plt.grid(True, which='minor', linestyle='-')
-	plt.colorbar()
+	plt.colorbar(shrink=.9)
 	plt.show()
 
+	print scores
 	min_ind_flat = np.argmin(scores)
 	min_ind = np.unravel_index(min_ind_flat, scores.shape)
 	print min_ind
+
 	'''	
 	print len(min_ind)
 	if len(min_ind) > 1:
@@ -406,10 +426,9 @@ def main():
 		C = Cs[min_ind[1]]
 		print C
 		'''
-	print min_ind[0]+1
-	tau = taos[min_ind[0]+1]
+	tau = taos[min_ind[0]]
 	print tau
-	C = Cs[min_ind[1]+4]
+	C = Cs[min_ind[1]]
 	print C
 
 	test_data = np.load('svm_test_data.npy')
