@@ -94,39 +94,33 @@ Once we had the code for this setup running in python, we left the number of hid
 \end{itemize}
 
 \subsubsection{Effects of parameter choice on overfitting}
-show for which parameters training error decreases while validation increases
-yes, some epochs, not many... and you do this only for the report. in the learning algo, you would stop immediately
-okwe actually got better results when running once over 98%
-what do you mean?
-over 98 is good!
-with early-stopping we nearly never get more than 97.75%
-so if you run 1 extra epoch after early stopping, it is better?
-yes, like two or threebecause it increases and goes down again
-that's a good finding!
-write it in your report!
-because there is no real danger of overfitting, because we use only 15 hidden inputsright?
-very good!
-in my case we used 64 units and we were overfitting if we would leave it for longer. We go more than 98 also
-with small dimentionality it generalizes more. It's not the same, but you can look at it learning in higher dimentionality and throwing away the least significant dimentions(which usually overfit)
-but it's not the same
+include \textsc{typical} example of overfitting by letting the validation error increase while the training error decreases for a few, say 3, rounds!
 	\begin{figure}[!ht]
 	\centering
-	\begin{subfigure}[b]{.45\textwidth}
+	\begin{subfigure}[b]{.4\textwidth}
 	\centering
-	\includegraphics[width=\textwidth]{mlp/placeholder.png}
+	\includegraphics[width=\textwidth]{mlp/plots/15h1_no_overfit.eps}
 	\caption{example subcaption}
 	\end{subfigure}
 	\quad
-	\begin{subfigure}[b]{.45\textwidth}
+	\begin{subfigure}[b]{.4\textwidth}
 	\centering
-	\includegraphics[width=\textwidth]{mlp/placeholder.png}
+	\includegraphics[width=\textwidth]{mlp/plots/70h1_wishful_thinking.png}
 	\caption{example subcaption}
 	\end{subfigure}
 	\caption{Example caption}
 	\label{fig:overfiting}
 	\end{figure}
-
-include \textsc{typical} example of overfitting by letting the validation error increase while the training error decreases for a few, say 3, rounds!
+show for which parameters training error decreases while validation increases
+yes, some epochs, not many... and you do this only for the report. in the learning algo, you would stop immediately
+okwe actually got better results when running once over 98%
+what do you mean? over 98 is good! with early-stopping we nearly never get more than 97.75\% so if you run 1 extra epoch after early stopping, it is better?
+yes, like two or threebecause it increases and goes down again that's a good finding!
+write it in your report!
+because there is no real danger of overfitting, because we use only 15 hidden inputsright?
+very good! in my case we used 64 units and we were overfitting if we would leave it for longer. We go more than 98 also
+with small dimentionality it generalizes more. It's not the same, but you can look at it learning in higher dimentionality and throwing away the least significant dimentions(which usually overfit)
+but it's not the same
 
 \subsubsection{Determining parameters for binary subtasks}
 

@@ -69,7 +69,7 @@ class MultiLayerPerceptron:
 		'''
 
 		self.epochs = 0
-		self.max_epochs = 50000 
+		self.max_epochs = 10
 		self.num_iter = 0 
 
 		self.cvgc = 1E-8
@@ -79,6 +79,11 @@ class MultiLayerPerceptron:
 		self.valid_err = 1E6
 		self.valid_err_arr = np.empty(0)
 		self.zerone = np.empty(0)
+
+		self.prev_w2 = 0
+		self.prev_w1s = 0
+		self.prev_b2 = 0
+		self.prev_b1 = 0
 
 	'''
 		sigmoid function
@@ -187,18 +192,22 @@ class MultiLayerPerceptron:
 
 		#self.dgw2 = -self.eta*self.gw2
 		self.dgw2 = -self.eta*(1-self.mu)*self.gw2+self.mu*self.dgw2
+		self.prev_w2 = self.w2
 		self.w2 = self.w2+self.dgw2
 
 		#self.dgw1 = -self.eta*self.gw1
 		self.dgw1 = -self.eta*(1-self.mu)*self.gw1+self.mu*self.dgw1
+		self.prev_w1s = self.w1s
 		self.w1s = self.w1s+self.dgw1
 
 		self.dgb2 = -self.eta*(1-self.mu)*self.gb2+self.mu*self.dgb2
 		#self.dgb2 = -self.eta*self.gb2
+		self.prev_b2 = self.b2
 		self.b2 = self.b2+self.dgb2
 		
 		self.dgb1 = -self.eta*(1-self.mu)*self.gb1+self.mu*self.dgb1
 		#self.dgb1 = -self.eta*self.gb1
+		self.prev_b1 = self.b1
 		self.b1 = self.b1+self.dgb1
 
 		return
@@ -251,7 +260,7 @@ class MultiLayerPerceptron:
 		self.valid_err = ret[0]
 		self.valid_mis_class = ret[1]*100.0/self.X_valid.shape[0]
 		self.valid_cor_class = ret[2]*100.0/self.X_valid.shape[0]
-		zerone_err = ret[3]
+		zerone_err = ret[1]/self.Y_valid.shape[1]
 		self.zerone = np.append(self.zerone, zerone_err)
 		self.valid_err_arr = np.append(self.valid_err_arr, self.valid_err)
 		return
@@ -315,15 +324,26 @@ class MultiLayerPerceptron:
 			self.print_status()
 
 			self.epochs+=1
-			self.eta-=1./self.X[0].shape[0]
+			self.eta = 0.01/(self.epochs+1)
+			#self.eta-=1./self.X[0].shape[0]
+			#self.mu += 0.01/(self.epochs+1)
 
+			'''
 			if self.valid_err > self.prev_valid_err:
 				print '*** Convergence after ', self.epochs, ' epochs ***'	
+
+				self.w2 = self.prev_w2
+				self.w1s = self.prev_w1s
+				self.b2 = self.prev_b2
+				self.b1 = self.prev_b1
+
 				self.disp_results()
 				self.cvg = True
+			'''
 
 			if self.epochs >= self.max_epochs:
 				print '*** Reached max. num of epochs', self.max_epochs, ' ***'
+				self.disp_results()
 				self.cvg = True
 
 

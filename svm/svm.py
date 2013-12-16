@@ -184,9 +184,12 @@ class C_SupportVectorMachine:
 		plt.figure('Violations')
 		plt.title('SVM criterion, abs(bup-blow)')
 		plt.plot(self.iters, self.violations, color="red", label="criterion based on violations")
+		#Y = np.linspace(0, 10, 10, endPoints=True)
+		yloc = np.array(range(1,11))
 		plt.xlabel('iterations')
 		plt.ylabel('$\Phi$')
 		plt.yscale('log')
+		plt.yticks(yloc, yloc)
 		plt.legend(loc='upper right')
 		plt.show()
 
@@ -304,8 +307,8 @@ class C_SupportVectorMachine:
 
 			if self.iter%20 == 0:
 				viol_crit = abs(self.bup-self.blow)
-				phi = 1./2*np.sum(self.alpha*(self.t*self.f)-self.alpha)
-				phi = np.sum(1./2*np.dot(np.outer(self.alpha*self.t, self.alpha*self.t), self.K.T)-self.alpha)
+				phi = np.sum(1./2*self.alpha*self.t*(self.f+self.t)-self.alpha)
+				#phi = np.sum(1./2*np.dot(np.outer(self.alpha*self.t, self.alpha*self.t), self.K.T)-self.alpha)
 				self.iters = np.append(self.iters, self.iter)
 				self.criterions = np.append(self.criterions, phi)
 				self.violations = np.append(self.violations, viol_crit)

@@ -9,12 +9,14 @@ Regarding preprocessing we applied the same normalization as with the Multilayer
 
 \subsubsection{SVM setup}
 To determine the optimal parametrization of the SVM we ran the SMO algorithm with 10-fold crossvalidation for the following range of values of $C$ and $\tau$:
+\begin{center}
 \begin{tabular}{l|llllllllll} 
 	\toprule
 	$\tau$ & 0.002 & 0.004 & 0.008 & 0.016 & 0.032 & 0.064 & 0.128 & 0.256 & 0.512 \\
 	C & 1 & 2 & 4 & 8 & 16 & 32 & 64 & 128 & 256 & 512 \\
 	\bottomrule
 \end{tabular}
+\end{center}
 
 \subsection{Results}
 Resulting scores from the crossvalidation
@@ -30,12 +32,29 @@ Plot the SVM criterion as function of SMddO iterations (only
 every 20 SMO steps). Additionally, plot the value of the convergence criterion,
 based on KKT condition violations (see additional note). For the latter plot,
 the vertical axis should have a logarithmic scale.
+\begin{figure}[!ht]
+	\centering
+	\begin{subfigure}[b]{.45\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{svm/svm_criterion.eps}
+	\caption{SVM criterion $\Phi = \frac{1}{2}\sum_{i,j}\alpha_i\alpha_j t_i t_j -\sum_i \alpha_i$ over number of iterations}
+	\end{subfigure}
+	\quad
+	\begin{subfigure}[b]{.45\textwidth}
+	\centering
+	\includegraphics[width=\textwidth]{svm/criterion_violations_plot.eps}
+	\caption{Convergence criterion $f_i-f_j$ plotted over number of iterations of respective most violated pair}
+	\end{subfigure}
+	\caption{Example caption}
+	\label{fig:svm_criterion}
+\end{figure}
+
 \section{Performance comparison of SVM and MLP}
 Comparison of the final setup of the Multilayer Perceptron and Support Vector Machine. In fig. .. we displayed the training and testing zero-one errors for the final parametrizations as required. One can see that SVM performs better overall...
 
 \begin{figure}[!ht]
 	\centering
-	\includegraphics[width=\textwidth]{svm/fake_bar_plot.eps}
+	\includegraphics[width=.6\textwidth]{svm/fake_bar_plot.eps}
 	\caption{bar plot of zero-one error for training and testing comparing MLP ( h1=.., eta=, mu=)and SVM (tau=.. and C=.. )}
 	\label{fig:comparison}
 \end{figure}
