@@ -1,0 +1,37 @@
+train_err 0.256165730043
+valid_err 0.276849634518
+train_err 0.0647672875302
+valid_err 0.0878067236815
+train_err 0.0437813083343
+valid_err 0.051806157533
+train_err 0.0253619345817
+valid_err 0.0436098156479
+train_err 0.0183359280763
+valid_err 0.0357553435536
+train_err 0.0144306040613
+valid_err 0.0386554741687
+*** Convergence after  6  epochs ***
+Results validation:
+perc. correct classifications:  98.5
+perc. misclassifications:  1.5
+(0.05124525887096526, 30, 1872)
+h1=10,eta0=0.1,mu=0.015
+
+train_err 0.073185852093
+valid_err 0.0897370074459
+train_err 0.043317974077
+valid_err 0.0577282714265
+train_err 0.0269253879419
+valid_err 0.0463409731811
+train_err 0.0206158701734
+valid_err 0.0413556071487
+train_err 0.0150245319866
+valid_err 0.038580802928
+train_err 0.0119042406901
+valid_err 0.0372622537944
+train_err 0.0117944652165
+valid_err 0.0394646910701
+*** Convergence after  7  epochs ***
+Results of validation:
+correct classifications:  98.55 %
+misclassifications:  1.45 %

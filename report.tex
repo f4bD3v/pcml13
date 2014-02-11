@@ -5,17 +5,18 @@
 \usepackage{textcomp}
 \usepackage{booktabs}
 \usepackage{subcaption}
-\usepackage[hmargin=1.5cm,vmargin=2.5cm,bindingoffset=0.5cm]{geometry}
+\usepackage{comment}
+\usepackage[hmargin=2.5cm,vmargin=2.5cm,bindingoffset=0.5cm]{geometry}
 
 \title{Pattern Classification and Machine Learning\\\Huge Miniproject}
-\author{Taha Elgraini (SCIPER ID: ...), Fabian Brix (SCIPER ID: 236334)}
+\author{Taha Elgraini (SCIPER ID: 238189), Fabian Brix (SCIPER ID: 236334)\\Group 22, Python}
 
 \begin{document}
 
 \maketitle
 
 \section{Introduction}
-The imperative of this project was to apply two different machine learning techniques, the Multilayer Perceptron (henceforth referred to as "MLP") and the Support Vector Machine (henceforth "SVM") to the recognition of hand-written digits. More specifically error back-propagation gradient descent optimization had to be implemented for MLP and the Sequential Minimal Optimization (SMO) algorithm had to be implemented to solve the problem with an SVM. Focus lay on a good understanding and clean implementation of the aforementioned algorithms as well as a sound evaluation of the performance of the implementation on problems posed with excerpts? the MNIST dataset.
+The imperative of this project was to apply two different machine learning techniques, the Multilayer Perceptron (henceforth referred to as "MLP") and the Support Vector Machine (henceforth "SVM") to the recognition of hand-written digits. More specifically error back-propagation gradient descent optimization had to be implemented for MLP and the Sequential Minimal Optimization (SMO) algorithm had to be implemented for SVM to solve problems posed with th0,00140e MNIST dataset. The MLP had to be trained on datasets of digits 3 and 5 as well as of 4 and 5, whereas the SVM classifier only had to be trained on the 3/5 problem. Both classifiers should accurately classify the digits in a test set provided labelling information of the training set. The focus thereby lay on a good understanding and clean implementation of the aforementioned algorithms as well as a sound evaluation of their performance.
 \input{'mlp/mlp.tex'}
 \input{'svm/svm.tex'}
 

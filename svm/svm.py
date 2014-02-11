@@ -98,6 +98,7 @@ class C_SupportVectorMachine:
 		i_up = self.Iup[fi_up_min]
 		#print "i_up",i_up
 
+		'''
 		if self.curr_pair == (i_low, i_up):
 			i_low_ind = np.where(self.Ilow == i_low)[0]
 			print i_low_ind
@@ -109,11 +110,14 @@ class C_SupportVectorMachine:
 			i_low = self.Ilow[fi_low_max]
 			fi_up_min = np.argmin(self.f[self.Iup])
 			i_up = self.Iup[fi_up_min]
+		'''
 
 		self.curr_pair = (i_low, i_up)
 		self.bup = self.f[i_up]
 		self.blow = self.f[i_low]
 
+		print self.Ilow
+		print self.Iup
 		#print self.blow
 		#print self.bup
 		if self.blow <= self.bup + 2.0*self.stop_coeff:
@@ -182,12 +186,12 @@ class C_SupportVectorMachine:
 		plt.show()
 
 		plt.figure('Violations')
-		plt.title('SVM criterion, abs(bup-blow)')
+		plt.title('Convergence criterion, $f_i-f_j$')
 		plt.plot(self.iters, self.violations, color="red", label="criterion based on violations")
 		#Y = np.linspace(0, 10, 10, endPoints=True)
 		yloc = np.array(range(1,11))
 		plt.xlabel('iterations')
-		plt.ylabel('$\Phi$')
+		plt.ylabel('$f_i-f_j$')
 		plt.yscale('log')
 		plt.yticks(yloc, yloc)
 		plt.legend(loc='upper right')
@@ -217,7 +221,15 @@ class C_SupportVectorMachine:
 			j = self.curr_pair[1]
 
 			if j == -1:
+				print self.bup-self.blow
+				print i,j
 				self.eval_train_err
+				viol_crit = self.low-self.bup
+				phi = np.sum(1./2*self.alpha*self.t*(self.f+self.t)-self.alpha)
+				#phi = np.sum(1./2*np.dot(np.outer(self.alpha*self.t, self.alpha*self.t), self.K.T)-self.alpha)
+				self.iters = np.append(self.iters, self.iter)
+				self.criterions = np.append(self.criterions, phi)
+				self.violations = np.append(self.violations, viol_crit)
 				break
 
 			self.sigma = self.t[i]*self.t[j]
@@ -306,7 +318,7 @@ class C_SupportVectorMachine:
 			#print self.curr_pair
 
 			if self.iter%20 == 0:
-				viol_crit = abs(self.bup-self.blow)
+				viol_crit = self.blow-self.bup
 				phi = np.sum(1./2*self.alpha*self.t*(self.f+self.t)-self.alpha)
 				#phi = np.sum(1./2*np.dot(np.outer(self.alpha*self.t, self.alpha*self.t), self.K.T)-self.alpha)
 				self.iters = np.append(self.iters, self.iter)

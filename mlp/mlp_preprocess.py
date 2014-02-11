@@ -7,9 +7,9 @@ def normalize():
 
         return        
 
-def save_data(data, labels, name):
-        fn_td = str(name)+'_data.npy'
-        fn_lb = str(name)+'_labels.npy'
+def save_data(data, labels, name, problem):
+        fn_td = 'data/'+str(name)+'_data_'+str(problem)+'.npy'
+        fn_lb = 'data/'+str(name)+'_labels_'+str(problem)+'.npy'
         np.save(fn_td, data)
         print 'Saved '+str(name)+' data to',fn_td
         np.save(fn_lb, labels)
@@ -17,15 +17,10 @@ def save_data(data, labels, name):
 
         return
 
-def main():
-        # for gitiots
-        #d = scipy.io.loadmat('C:\Users\Administrator\Desktop\pcml13-master/mnist/mp_3-5_data.mat') # corresponding MAT file
-        # for gitpros
-        d = scipy.io.loadmat('../mnist/mp_3-5_data.mat') # corresponding MAT file
+def process_dataset(d, problem):
 
         data = d['Xtrain']    # Xtest for test data
         labels = d['Ytrain']  # Ytest for test labels
-
 
         print 'Finished loading',data.shape[0],'datapoints'
         print 'With',data.shape[1],'components each'
@@ -45,22 +40,22 @@ def main():
         c_min = 1.*np.min(train_data)
         
         
-	train_data = (train_data-c_min*1.0)/(c_max-c_min)
-	train_labels = perm_labels[0:train_len]
-        save_data(train_data, train_labels, 'training')
+        train_data = (train_data-c_min*1.0)/(c_max-c_min)
+        train_labels = perm_labels[0:train_len]
+        save_data(train_data, train_labels, 'training', problem)
 
 
-	valid_data = (valid_data-c_min*1.0)/(c_max-c_min)
-	valid_labels = perm_labels[train_len:]
+        valid_data = (valid_data-c_min*1.0)/(c_max-c_min)
+        valid_labels = perm_labels[train_len:]
 
-        save_data(valid_data, valid_labels, 'validation')
+        save_data(valid_data, valid_labels, 'validation', problem)
 
         test_data = d['Xtest']
         test_labels = d['Ytest']
 
         test_data = (test_data-c_min*1.0)/(c_max-c_min)
 
-        save_data(test_data, test_labels, 'test')
+        save_data(test_data, test_labels, 'test', problem)
         '''
                 downsample bitmaps
                 - take a subset of vectors with a subset of components
@@ -74,15 +69,27 @@ def main():
         print len(train_data_50)
         train_label_50 = train_labels[rand_ind]
 
-        save_data(train_data_50, train_label_50, '50_training')
+        save_data(train_data_50, train_label_50, '50_training', problem)
 
         #num_samples = num_samples/3  
         rand_ind = random.sample(range(len(valid_data)), num_samples)        
         valid_data_50 = valid_data[rand_ind]
         valid_label_50 = valid_labels[rand_ind]
 
-        save_data(valid_data_50, valid_label_50, str(num_samples)+'_validation')
+        save_data(valid_data_50, valid_label_50, str(num_samples)+'_validation', problem)
+
+        return
         
+def main():
+        # for gitiots
+        #d = scipy.io.loadmat('C:\Users\Administrator\Desktop\pcml13-master/mnist/mp_3-5_data.mat') # corresponding MAT file
+        # for gitpros
+        d1 = scipy.io.loadmat('../mnist/mp_3-5_data.mat') # corresponding MAT file
+        d2 = scipy.io.loadmat('../mnist/mp_4-9_data.mat')
+
+        process_dataset(d1, '3_5')
+        process_dataset(d2, '4_9')
+
         return
 
 if __name__ == "__main__":

@@ -1,0 +1,8 @@
+PWD /home/fab/EPFL/PCML/pcml13/mlp
+INPUT /etc/texmf/web2c/texmf.cnf
+INPUT /usr/share/texlive/texmf/web2c/texmf.cnf
+INPUT /var/lib/texmf/web2c/xetex/xelatex.fmt
+INPUT mlp.tex
+OUTPUT mlp.log
+INPUT /usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map
+INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmbx10.tfm
